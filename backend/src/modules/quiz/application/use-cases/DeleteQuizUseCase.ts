@@ -25,11 +25,14 @@ export class DeleteQuizUseCase {
     teacherId: string,
     quizId: string
   ): Promise<void> {
+    console.log(`[DeleteQuizUseCase] ENTRY: quizId=${quizId}, teacherId=${teacherId}`);
+
     // Bước 1: load quiz
     const quiz = await this.quizRepository.findById(quizId);
     if (!quiz) {
       throw new Error(`NotFoundError: Quiz "${quizId}" không tồn tại.`);
     }
+    console.log(`[DeleteQuizUseCase] Loaded quiz:`, { quizId, status: quiz.status, sectionId: quiz.sectionId });
 
     // Bước 2: ownership check
     if (quiz.teacherId !== teacherId) {
@@ -37,6 +40,7 @@ export class DeleteQuizUseCase {
         "AccessDeniedError: Bạn không có quyền xóa quiz này."
       );
     }
+    console.log(`[DeleteQuizUseCase] Ownership check OK`);
 
     // Bước 3: chỉ DRAFT hoặc HIDDEN mới xóa được
     if (quiz.status !== "Draft" && quiz.status !== "Hidden") {
@@ -44,9 +48,12 @@ export class DeleteQuizUseCase {
         `DomainError: Chỉ có thể xóa quiz ở trạng thái Draft hoặc Hidden (hiện tại: "${quiz.status}").`
       );
     }
+    console.log(`[DeleteQuizUseCase] Status check OK`);
 
     // Bước 4: delete từ repository
+    console.log(`[DeleteQuizUseCase] Deleting quiz from repository`);
     await this.quizRepository.delete(quizId);
+    console.log(`[DeleteQuizUseCase] Quiz deleted from repository`);
 
     // Bước 5: invalidate analytics cache
     const sectionId = quiz.sectionId;
@@ -58,12 +65,20 @@ export class DeleteQuizUseCase {
       AnalyticCacheKey.atRiskStudents(sectionId),
       AnalyticCacheKey.sectionRanking(sectionId),
     ];
+
+    console.log(`[DeleteQuizUseCase] Cache keys to invalidate:`, keysToInvalidate);
     await this.analyticCache.invalidate(keysToInvalidate);
+    console.log(`[DeleteQuizUseCase] Invalidated exact keys`);
+
+    console.log(`[DeleteQuizUseCase] Invalidating pattern:`, AnalyticCacheKey.HIER_PATTERN);
     await this.analyticCache.invalidatePattern(AnalyticCacheKey.HIER_PATTERN);
+    console.log(`[DeleteQuizUseCase] Invalidated hierarchical pattern`);
 
     // Bước 6: publish event
+    console.log(`[DeleteQuizUseCase] Publishing QuizDeleted event`);
     await this.eventPublisher.publish(
       new QuizDeleted(quizId, teacherId, sectionId)
     );
+    console.log(`[DeleteQuizUseCase] Event published, delete complete`);
   }
 }
