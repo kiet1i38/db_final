@@ -496,40 +496,59 @@ export class QuizAttemptSubmittedProjector {
 
   // MongoDB writes
   private async writeStudentQuizAnswer(e: AttemptFinalizedEvent, status: "SUBMITTED" | "EXPIRED"): Promise<void> {
+    console.log('[QuizAttemptSubmittedProjector.writeStudentQuizAnswer] ENTRY');
+    console.log('[QuizAttemptSubmittedProjector.writeStudentQuizAnswer] attemptId:', e.attemptId);
+    console.log('[QuizAttemptSubmittedProjector.writeStudentQuizAnswer] answers count:', e.answers?.length);
+    console.log('[QuizAttemptSubmittedProjector.writeStudentQuizAnswer] First answer:', e.answers?.[0]);
+
     const percentage = e.maxScore > 0
       ? Math.round((e.score / e.maxScore) * 10000) / 10000
       : 0;
 
-    await this.studentQuizAnswerModel.replaceOne(
-      { _id: e.attemptId },
-      {
-        _id:           e.attemptId,
-        quizId:        e.quizId,
-        quizTitle:     e.quizTitle,
-        studentId:     e.studentId,
-        sectionId:     e.sectionId,
-        score:         e.score,
-        maxScore:      e.maxScore,
-        percentage:    percentage,
-        startedAt:     e.startedAt,
-        submittedAt:   e.occurredAt,
-        durationSeconds: Math.floor((e.occurredAt.getTime() - e.startedAt.getTime()) / 1000),
-        attemptNumber: e.attemptNumber,
-        status,
-        answers: e.answers.map((a) => ({
-          questionId:             a.questionId,
-          questionContent:        a.questionContent,
-          selectedOptionIds:      [...a.selectedOptionIds],
-          selectedOptionContents: [...a.selectedOptionContents],
-          correctOptionIds:       [...a.correctOptionIds],
-          correctOptionContents:  [...a.correctOptionContents],
-          isCorrect:              a.isCorrect,
-          earnedPoints:           a.earnedPoints,
-          questionPoints:         e.pointsPerQuestion,
-        })),
-      },
-      { upsert: true },
-    ).exec();
+    const data = {
+      _id:           e.attemptId,
+      quizId:        e.quizId,
+      quizTitle:     e.quizTitle,
+      studentId:     e.studentId,
+      sectionId:     e.sectionId,
+      score:         e.score,
+      maxScore:      e.maxScore,
+      percentage:    percentage,
+      startedAt:     e.startedAt,
+      submittedAt:   e.occurredAt,
+      durationSeconds: Math.floor((e.occurredAt.getTime() - e.startedAt.getTime()) / 1000),
+      attemptNumber: e.attemptNumber,
+      status,
+      answers: e.answers.map((a) => ({
+        questionId:             a.questionId,
+        questionContent:        a.questionContent,
+        selectedOptionIds:      [...a.selectedOptionIds],
+        selectedOptionContents: [...a.selectedOptionContents],
+        correctOptionIds:       [...a.correctOptionIds],
+        correctOptionContents:  [...a.correctOptionContents],
+        isCorrect:              a.isCorrect,
+        earnedPoints:           a.earnedPoints,
+        questionPoints:         e.pointsPerQuestion,
+      })),
+    };
+
+    console.log('[QuizAttemptSubmittedProjector.writeStudentQuizAnswer] Writing to MongoDB:', {
+      attemptId: data._id,
+      answersLength: data.answers?.length,
+      firstAnswer: data.answers?.[0],
+    });
+
+    try {
+      const result = await this.studentQuizAnswerModel.replaceOne(
+        { _id: e.attemptId },
+        data,
+        { upsert: true },
+      ).exec();
+      console.log('[QuizAttemptSubmittedProjector.writeStudentQuizAnswer] SUCCESS:', result);
+    } catch (err) {
+      console.error('[QuizAttemptSubmittedProjector.writeStudentQuizAnswer] FAILED:', err);
+      throw err;
+    }
   }
 
   private async writeQuestionFailureRate(e: AttemptFinalizedEvent): Promise<void> {
