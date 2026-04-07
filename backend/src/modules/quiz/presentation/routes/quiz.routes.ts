@@ -1,6 +1,7 @@
 import { Router, RequestHandler }    from "express";
 import { EventEmitter }              from "events";
 import oracledb                      from "oracledb";
+import { RedisClientType }           from "redis";
 
 // Academic Context — chỉ import từ entry point (index.ts)
 // Không import thẳng vào bất kỳ file nào bên trong Academic
@@ -12,6 +13,9 @@ import { QuizRepository }            from "../../infrastructure/repositories/Qui
 import { SystemDateTimeProvider }    from "../../infrastructure/providers/SystemDateTimeProvider";
 import { EventEmitterProvider }      from "../../infrastructure/providers/EventEmitterProvider";
 
+// Analytics Cache
+import { RedisAnalyticCache }        from "../../../analytic/infrastructure/providers/RedisAnalyticCache";
+
 // Use Cases
 import { CreateQuizUseCase }         from "../../application/use-cases/CreateQuizUseCase";
 import { UpdateQuizUseCase }         from "../../application/use-cases/UpdateQuizUseCase";
@@ -20,6 +24,7 @@ import { PublishQuizUseCase }        from "../../application/use-cases/PublishQu
 import { HideQuizUseCase }           from "../../application/use-cases/HideQuizUseCase";
 import { DeleteQuizUseCase }         from "../../application/use-cases/DeleteQuizUseCase";
 import { GetQuizUseCase, GetQuizListUseCase } from "../../application/use-cases/GetQuizUseCase";
+import { GetQuizForAttemptUseCase } from "../../application/use-cases/GetQuizForAttemptUseCase";
 import { GetPublishedQuizListUseCase } from "../../application/use-cases/GetPublishedQuizListUseCase";
 import { AddQuestionUseCase, RemoveQuestionUseCase, UpdateQuestionUseCase } from "../../application/use-cases/AddQuestionUseCase";
 import { AddAnswerOptionUseCase, RemoveAnswerOptionUseCase, UpdateAnswerOptionUseCase } from "../../application/use-cases/AddAnswerOptionUseCase";
@@ -35,6 +40,7 @@ export function createQuizRouter(
   authenticate:     RequestHandler,
   authorizeTeacher: RequestHandler,
   authorizeAttemptQuiz: RequestHandler,
+  redisClient:      RedisClientType,
 ): Router {
   const router = Router();
 
@@ -45,6 +51,7 @@ export function createQuizRouter(
   const quizRepository   = new QuizRepository(QuizModel);
   const dateTimeProvider = new SystemDateTimeProvider();
   const eventPublisher   = new EventEmitterProvider(eventEmitter);
+  const analyticCache    = new RedisAnalyticCache(redisClient);
 
   // Use Cases
   const createQuizUseCase     = new CreateQuizUseCase(quizRepository, academicService, dateTimeProvider, eventPublisher);
@@ -52,8 +59,9 @@ export function createQuizRouter(
   const updateDeadlineUseCase = new UpdateDeadlineUseCase(quizRepository, dateTimeProvider);
   const publishQuizUseCase    = new PublishQuizUseCase(quizRepository, dateTimeProvider, eventPublisher);
   const hideQuizUseCase       = new HideQuizUseCase(quizRepository, dateTimeProvider, eventPublisher);
-  const deleteQuizUseCase     = new DeleteQuizUseCase(quizRepository, eventPublisher);
+  const deleteQuizUseCase     = new DeleteQuizUseCase(quizRepository, eventPublisher, analyticCache);
   const getQuizUseCase        = new GetQuizUseCase(quizRepository);
+  const getQuizForAttemptUseCase = new GetQuizForAttemptUseCase(quizRepository);
   const getQuizListUseCase    = new GetQuizListUseCase(quizRepository);
   const getPublishedQuizListUseCase = new GetPublishedQuizListUseCase(quizRepository);
 
@@ -73,6 +81,7 @@ export function createQuizRouter(
     hideQuizUseCase,
     deleteQuizUseCase,
     getQuizUseCase,
+    getQuizForAttemptUseCase,
     getQuizListUseCase,
     getPublishedQuizListUseCase,
   );
@@ -96,6 +105,7 @@ export function createQuizRouter(
   // Quiz
   router.post(  "/quizzes",                     authenticate, authorizeTeacher, quizController.createQuiz.bind(quizController));
   router.get(   "/quizzes/:quizId",             authenticate, authorizeTeacher, quizController.getQuiz.bind(quizController));
+  router.get(   "/quizzes/:quizId/attempt",     authenticate, authorizeAttemptQuiz, quizController.getQuizForAttempt.bind(quizController)); // Student view during attempt
   router.patch( "/quizzes/:quizId",             authenticate, authorizeTeacher, quizController.updateQuiz.bind(quizController));
   router.delete("/quizzes/:quizId",             authenticate, authorizeTeacher, quizController.deleteQuiz.bind(quizController));
   router.patch( "/quizzes/:quizId/deadline",    authenticate, authorizeTeacher, quizController.updateDeadline.bind(quizController));

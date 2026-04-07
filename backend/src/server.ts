@@ -111,6 +111,7 @@ const startServer = async (): Promise<void> => {
       authenticate,
       authorize(PermissionType.CREATE_QUIZ),
       authorize(PermissionType.ATTEMPT_QUIZ),
+      redisClient,
     ),
   );
 
