@@ -84,11 +84,14 @@ export default function QuizResultsPage() {
 
         const result = await analyticsService.getAnswerReview(finalAttemptId);
         console.log('[QuizResultsPage] Got answer review for attemptId:', finalAttemptId);
-        console.log('[QuizResultsPage] Result:', { score: result.score, maxScore: result.maxScore, answersCount: result.answers?.length || 0 });
+        console.log('[QuizResultsPage] Result:', { score: result.score, maxScore: result.maxScore, answersCount: result.answerReview?.length || result.answers?.length || 0 });
 
-        setScore(result.score || 0);
+        setScore(result.score || result.totalScore || 0);
         setMaxScore(result.maxScore || 0);
-        setAnswers(result.answers || []);
+        // Use answerReview if available (new structure), otherwise fallback to answers
+        const answers = result.answerReview || result.answers || [];
+        console.log('[QuizResultsPage] Setting answers:', answers);
+        setAnswers(answers);
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : 'Failed to load results';
         console.error('[QuizResultsPage] Error loading results:', errMsg);
