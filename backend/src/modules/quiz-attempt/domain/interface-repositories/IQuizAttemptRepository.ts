@@ -18,6 +18,19 @@ export interface IQuizAttemptRepository {
     quizId: string,
   ): Promise<QuizAttempt | null>;
 
+  // Đếm số InProgress attempt của student cho quiz — detect race condition
+  countInProgressByStudentAndQuiz(
+    studentId: string,
+    quizId: string,
+  ): Promise<number>;
+
+  // Xóa tất cả InProgress attempts ngoại trừ một — cleanup after race condition detected
+  deleteOlderInProgressAttempts(
+    studentId: string,
+    quizId: string,
+    keepAttemptId: string,
+  ): Promise<void>;
+
   // Persist attempt mới kèm expiresAt — chỉ dùng khi start attempt.
   // expiresAt = startedAt + timeLimitMs, được tính bởi StartAttemptUseCase.
   // Không dùng cho submit/expire vì expiresAt lúc đó đã có sẵn trong DB.

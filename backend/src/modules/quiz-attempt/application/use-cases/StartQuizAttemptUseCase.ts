@@ -111,8 +111,22 @@ export class StartQuizAttemptUseCase {
     const timeLimitMs = snapshot.timeLimitMinutes * 60_000;
     const expiresAt   = new Date(now.getTime() + timeLimitMs);
 
-    // Bước 6: Persist 
+    // Bước 6: Persist
     await this.attemptRepository.saveNewAttempt(attempt, expiresAt);
+
+    // SAFETY CHECK: Detect race condition where concurrent requests both created InProgress attempts
+    // This can happen if user double-clicks or two requests arrive simultaneously
+    const allInProgress = await this.attemptRepository.countInProgressByStudentAndQuiz(
+      studentId,
+      quizId,
+    );
+    console.log('[StartQuizAttemptUseCase.execute] Race condition check - InProgress count:', allInProgress);
+
+    if (allInProgress > 1) {
+      console.error('[StartQuizAttemptUseCase.execute] RACE CONDITION DETECTED! Multiple InProgress attempts found:', { studentId, quizId, count: allInProgress });
+      // Delete all but the one we just created (keep the newest)
+      await this.attemptRepository.deleteOlderInProgressAttempts(studentId, quizId, attempt.attemptId);
+    }
 
     // Bước 7: Publish event
     await this.eventPublisher.publish(

@@ -64,6 +64,39 @@ export class QuizAttemptRepository implements IQuizAttemptRepository {
     return QuizAttemptMapper.toDomain(doc);
   }
 
+  // Đếm số InProgress attempts — detect race condition
+  async countInProgressByStudentAndQuiz(
+    studentId: string,
+    quizId: string,
+  ): Promise<number> {
+    const count = await this.attemptModel
+      .countDocuments({ studentId, quizId, status: AttemptStatus.IN_PROGRESS })
+      .exec();
+    console.log('[QuizAttemptRepository.countInProgressByStudentAndQuiz]', { studentId, quizId, count });
+    return count;
+  }
+
+  // Xóa tất cả InProgress attempts ngoại trừ keepAttemptId
+  async deleteOlderInProgressAttempts(
+    studentId: string,
+    quizId: string,
+    keepAttemptId: string,
+  ): Promise<void> {
+    console.log('[QuizAttemptRepository.deleteOlderInProgressAttempts] ENTRY', { studentId, quizId, keepAttemptId });
+    const result = await this.attemptModel
+      .deleteMany({
+        studentId,
+        quizId,
+        status: AttemptStatus.IN_PROGRESS,
+        _id: { $ne: keepAttemptId }, // Delete all except this one
+      })
+      .exec();
+
+    if (result.deletedCount > 0) {
+      console.log('[QuizAttemptRepository.deleteOlderInProgressAttempts] Deleted duplicate InProgress attempts:', { deleted: result.deletedCount });
+    }
+  }
+
   // dùng $set, không query DB lần 2
   //
   // Chỉ update đúng những field thay đổi khi save:
