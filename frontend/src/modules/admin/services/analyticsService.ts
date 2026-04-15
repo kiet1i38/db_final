@@ -113,7 +113,7 @@ export const analyticsService = {
   },
 
   // Transform backend tree structure to frontend format
-  private transformHierarchicalReport(data: any): HierarchicalReportNode {
+  transformHierarchicalReport(data: any): HierarchicalReportNode {
     console.log('[Admin Analytics.transformHierarchicalReport] ENTRY');
     console.log('[Admin Analytics.transformHierarchicalReport] Input data:', data);
     console.log('[Admin Analytics.transformHierarchicalReport] Input keys:', Object.keys(data || {}));
