@@ -13,23 +13,38 @@ export function normalizeQuiz(data: any): Quiz {
     quizSource?.items ??
     [];
 
+  const quizId = quizSource.quizId || quizSource.id || '';
+  const title = quizSource.title || 'Untitled quiz';
+  const status = String(quizSource.status || 'DRAFT').toUpperCase();
+  const totalQuestions = Number.isFinite(Number(quizSource.totalQuestions))
+    ? Number(quizSource.totalQuestions)
+    : Array.isArray(questionsSource)
+      ? questionsSource.length
+      : 0;
+  const maxScore = Number.isFinite(Number(quizSource.maxScore)) ? Number(quizSource.maxScore) : 0;
+  const questionPoints = Number.isFinite(Number(quizSource.questionPoints))
+    ? Number(quizSource.questionPoints)
+    : totalQuestions > 0
+      ? maxScore / totalQuestions
+      : 0;
+
   return {
-    id: quizSource.quizId || quizSource.id,
-    quizId: quizSource.quizId || quizSource.id,
-    teacherId: quizSource.teacherId,
-    sectionId: quizSource.sectionId,
-    title: quizSource.title,
-    description: quizSource.description,
-    timeLimitMinutes: quizSource.timeLimitMinutes,
-    deadlineAt: quizSource.deadlineAt,
-    maxAttempts: quizSource.maxAttempts,
-    maxScore: quizSource.maxScore,
-    status: quizSource.status,
+    id: quizId,
+    quizId,
+    teacherId: quizSource.teacherId || '',
+    sectionId: quizSource.sectionId || '',
+    title,
+    description: quizSource.description || '',
+    timeLimitMinutes: Number.isFinite(Number(quizSource.timeLimitMinutes)) ? Number(quizSource.timeLimitMinutes) : 0,
+    deadlineAt: quizSource.deadlineAt || '',
+    maxAttempts: Number.isFinite(Number(quizSource.maxAttempts)) ? Number(quizSource.maxAttempts) : 1,
+    maxScore,
+    status,
     createdAt: quizSource.createdAt,
     updatedAt: quizSource.updatedAt,
     hiddenReason: quizSource.hiddenReason,
-    totalQuestions: quizSource.totalQuestions,
-    questionPoints: quizSource.questionPoints,
+    totalQuestions,
+    questionPoints,
     questions: Array.isArray(questionsSource)
       ? questionsSource.map(normalizeQuestion)
       : [],

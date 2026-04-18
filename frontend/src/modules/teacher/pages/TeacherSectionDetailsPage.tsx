@@ -23,7 +23,6 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import AnalyticsIcon from '@mui/icons-material/Analytics';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useAuth, Navbar, useNotification } from '../../shared';
 import { academicService } from '../../student/services/academicService';
@@ -353,23 +352,6 @@ export default function TeacherSectionDetailsPage() {
                         </Button>
                       )}
 
-                      {/* Analytics Button (Published only) */}
-                      {quiz.status === 'PUBLISHED' && (
-                        <Button
-                          size="small"
-                          fullWidth
-                          startIcon={<AnalyticsIcon />}
-                          variant="outlined"
-                          onClick={() =>
-                            navigate(`/teacher/quiz/${quiz.id}/analytics`, {
-                              state: { sectionId },
-                            })
-                          }
-                        >
-                          Analytics
-                        </Button>
-                      )}
-
                       {/* Preview/Edit Button (Published/Hidden only) */}
                       {(quiz.status === 'PUBLISHED' || quiz.status === 'Published' || quiz.status === 'HIDDEN' || quiz.status === 'Hidden') && (
                         <Button
@@ -378,7 +360,7 @@ export default function TeacherSectionDetailsPage() {
                           onClick={() => navigate(`/teacher/quiz/${quiz.id}/edit`)}
                           variant="outlined"
                         >
-                          Edit/Preview
+                          Edit Quiz
                         </Button>
                       )}
                     </CardActions>

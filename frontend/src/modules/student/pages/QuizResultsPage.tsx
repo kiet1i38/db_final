@@ -110,9 +110,13 @@ export default function QuizResultsPage() {
   if (loading) {
     return (
       <PageShell title="Quiz Results" subtitle="Review your attempt and answers">
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-          <CircularProgress />
-        </Box>
+        <Card sx={{ borderRadius: 5, border: '1px solid rgba(148, 163, 184, 0.14)', boxShadow: '0 12px 32px rgba(15, 23, 42, 0.06)' }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+              <CircularProgress />
+            </Box>
+          </CardContent>
+        </Card>
       </PageShell>
     );
   }
@@ -122,25 +126,25 @@ export default function QuizResultsPage() {
 
   return (
     <PageShell title="Quiz Results" subtitle="Review your attempt and answer breakdown">
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
         <Button startIcon={<ArrowBackIcon />} variant="outlined" onClick={() => {
           if (sectionId) navigate(`/student/sections/${sectionId}/analytics`);
           else navigate(-1);
-        }}>
+        }} sx={{ minHeight: 42 }}>
           Back to Analytics
         </Button>
-        <Button variant="text" onClick={() => navigate(-2)}>Back to Quizzes</Button>
+        <Button variant="text" onClick={() => navigate(-2)} sx={{ minHeight: 42 }}>Back to Quizzes</Button>
       </Box>
 
       {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
-      <Card sx={{ mb: 4, borderRadius: 4, boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)', background: passed ? 'linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%)' : 'linear-gradient(135deg, #fef2f2 0%, #ffffff 100%)' }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-            <Box sx={{ textAlign: 'center' }}>{passed ? <CheckCircleIcon sx={{ fontSize: 60, color: 'success.main' }} /> : <CancelIcon sx={{ fontSize: 60, color: 'error.main' }} />}</Box>
+      <Card sx={{ mb: 4, borderRadius: 5, border: '1px solid rgba(148, 163, 184, 0.14)', boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)', background: passed ? 'linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%)' : 'linear-gradient(135deg, #fef2f2 0%, #ffffff 100%)' }}>
+        <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flexWrap: 'wrap' }}>
+            <Box sx={{ textAlign: 'center' }}>{passed ? <CheckCircleIcon sx={{ fontSize: 64, color: 'success.main' }} /> : <CancelIcon sx={{ fontSize: 64, color: 'error.main' }} />}</Box>
             <Box sx={{ flexGrow: 1 }}>
-              <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>{formatters.formatScore(score, maxScore)}</Typography>
-              <Typography variant="h6" sx={{ color: passed ? 'success.dark' : 'error.dark', fontWeight: 700 }}>{passed ? 'PASSED' : 'NOT PASSED'}</Typography>
+              <Typography variant="h4" sx={{ fontWeight: 900, mb: 1 }}>{formatters.formatScore(score, maxScore)}</Typography>
+              <Typography variant="h6" sx={{ color: passed ? 'success.dark' : 'error.dark', fontWeight: 800 }}>{passed ? 'PASSED' : 'NOT PASSED'}</Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 2 }}>
                 <Box sx={{ flexGrow: 1 }}>
                   <LinearProgress variant="determinate" value={percentage} sx={{ height: 10, borderRadius: 999 }} color={passed ? 'success' : 'error'} />
@@ -152,18 +156,18 @@ export default function QuizResultsPage() {
         </CardContent>
       </Card>
 
-      <Typography variant="h5" sx={{ mb: 2, fontWeight: 800 }}>Answer Review</Typography>
+      <Typography variant="h5" sx={{ mb: 2, fontWeight: 900 }}>Answer Review</Typography>
       {answers.length === 0 ? (
         <Alert severity="info">No answers to review</Alert>
       ) : (
         <Stack spacing={3}>
           {answers.filter((review) => review.question).map((review, index) => (
-            <Card key={review.question.id} sx={{ borderRadius: 4, boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)', borderLeft: `6px solid ${review.studentAnswer.isCorrect ? '#10b981' : '#ef4444'}` }}>
-              <CardContent>
+            <Card key={review.question.id} sx={{ borderRadius: 5, border: '1px solid rgba(148, 163, 184, 0.14)', boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)', borderLeft: `6px solid ${review.studentAnswer.isCorrect ? '#10b981' : '#ef4444'}` }}>
+              <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
                 <Stack spacing={2}>
                   <Box>
                     <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>Question {index + 1}</Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 800, mt: 0.5 }}>{review.question.content}</Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 900, mt: 0.5 }}>{review.question.content}</Typography>
                   </Box>
                   <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                     <Chip icon={review.studentAnswer.isCorrect ? <CheckCircleIcon /> : <CancelIcon />} label={review.studentAnswer.isCorrect ? 'Correct' : 'Incorrect'} color={review.studentAnswer.isCorrect ? 'success' : 'error'} size="small" />
@@ -176,12 +180,12 @@ export default function QuizResultsPage() {
                       const rowColor = isCorrect ? '#ecfdf5' : isSelected ? '#fef2f2' : '#f8fafc';
                       return (
                         <Box key={opt.id} sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1.5, borderRadius: 3, bgcolor: rowColor, border: '1px solid rgba(148, 163, 184, 0.14)' }}>
-                          <Box sx={{ width: 20, height: 20, borderRadius: review.question.questionType === 'SINGLE_CHOICE' ? '50%' : '4px', border: '2px solid', borderColor: isCorrect ? '#10b981' : isSelected ? '#ef4444' : '#cbd5e1', display: 'grid', placeItems: 'center', color: '#fff', bgcolor: isSelected ? (isCorrect ? '#10b981' : '#ef4444') : 'transparent', fontSize: 12, fontWeight: 700 }}>
+                          <Box sx={{ width: 22, height: 22, borderRadius: review.question.questionType === 'SINGLE_CHOICE' ? '50%' : '6px', border: '2px solid', borderColor: isCorrect ? '#10b981' : isSelected ? '#ef4444' : '#cbd5e1', display: 'grid', placeItems: 'center', color: '#fff', bgcolor: isSelected ? (isCorrect ? '#10b981' : '#ef4444') : 'transparent', fontSize: 12, fontWeight: 700 }}>
                             {isSelected ? (isCorrect ? '✓' : '✗') : ''}
                           </Box>
                           <Typography variant="body2" sx={{ flex: 1, fontWeight: isSelected ? 700 : 500, color: isCorrect ? '#047857' : isSelected ? '#b91c1c' : 'text.primary' }}>{opt.content}</Typography>
                           {isCorrect && !review.studentAnswer.isCorrect && <Chip label="Correct answer" size="small" variant="outlined" color="success" />}
-                          {isSelected && <Chip label={review.studentAnswer.isCorrect ? 'Your answer' : 'Your answer'} size="small" variant="outlined" color={review.studentAnswer.isCorrect ? 'success' : 'error'} />}
+                          {isSelected && <Chip label="Your answer" size="small" variant="outlined" color={review.studentAnswer.isCorrect ? 'success' : 'error'} />}
                         </Box>
                       );
                     })}
@@ -194,7 +198,7 @@ export default function QuizResultsPage() {
         </Stack>
       )}
 
-      <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
+      <Box sx={{ display: 'flex', gap: 2, mt: 4, flexWrap: 'wrap' }}>
         <Button
           variant="contained"
           onClick={() => {
@@ -203,6 +207,7 @@ export default function QuizResultsPage() {
               state: { sectionId },
             });
           }}
+          sx={{ minHeight: 42 }}
         >
           Retry Quiz
         </Button>

@@ -18,6 +18,7 @@ import {
   Chip,
   Grid,
   Divider,
+  Paper,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
@@ -326,22 +327,45 @@ export default function QuizEditorPage() {
 
   return (
     <PageShell title={quizId ? 'Edit Quiz' : 'Create New Quiz'} subtitle="Build questions, configure settings, and publish when ready">
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-        <IconButton onClick={() => navigate(-1)} sx={{ bgcolor: '#fff' }}><ArrowBackIcon /></IconButton>
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h4" sx={{ fontWeight: 800 }}>{quizId ? 'Edit Quiz' : 'Create New Quiz'}</Typography>
-          <Typography variant="body2" color="text.secondary">{sectionId ? `Section ${sectionId}` : 'Quiz setup'}</Typography>
+      <Paper
+        elevation={0}
+        sx={{
+          mb: 3,
+          p: { xs: 2.5, md: 3 },
+          borderRadius: 5,
+          border: '1px solid rgba(148, 163, 184, 0.14)',
+          background: 'linear-gradient(135deg, rgba(15, 118, 110, 0.08) 0%, rgba(255,255,255,0.95) 100%)',
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <IconButton onClick={() => navigate(-1)} sx={{ bgcolor: '#fff', border: '1px solid rgba(148, 163, 184, 0.18)' }}>
+            <ArrowBackIcon />
+          </IconButton>
+          <Box sx={{ flex: 1 }}>
+            <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: 'wrap' }}>
+              <Chip label={quizId ? 'Editing mode' : 'Draft mode'} color="primary" variant="outlined" size="small" />
+              {isDirty && <Chip label="Unsaved changes" color="warning" variant="outlined" size="small" />}
+            </Stack>
+            <Typography variant="h4" sx={{ fontWeight: 900, lineHeight: 1.1 }}>
+              {quizId ? 'Edit Quiz' : 'Create New Quiz'}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {sectionId ? `Section ${sectionId}` : 'Quiz setup'}
+            </Typography>
+          </Box>
         </Box>
-        {isDirty && <Chip label="Unsaved changes" color="warning" variant="outlined" />}
-      </Box>
+      </Paper>
 
       {quiz && (
         <Grid container spacing={3}>
           <Grid item xs={12} lg={8}>
-            <Card sx={{ borderRadius: 4, boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)' }}>
-              <CardContent>
+            <Card sx={{ borderRadius: 5, boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)', border: '1px solid rgba(148, 163, 184, 0.14)' }}>
+              <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
                 <Stack spacing={2.5}>
-                  <Typography variant="h6" sx={{ fontWeight: 800 }}>Quiz Information</Typography>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 900 }}>Quiz information</Typography>
+                    <Typography variant="body2" color="text.secondary">Set the core details students will see before attempting the quiz.</Typography>
+                  </Box>
                   <TextField fullWidth label="Quiz Title" value={title} onChange={(e) => { setTitle(e.target.value); setIsDirty(true); }} />
                   <TextField fullWidth label="Description" value={description} onChange={(e) => { setDescription(e.target.value); setIsDirty(true); }} multiline rows={3} />
                   <Grid container spacing={2}>
@@ -354,12 +378,12 @@ export default function QuizEditorPage() {
               </CardContent>
             </Card>
 
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3, mb: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3, mb: 2, gap: 2, flexWrap: 'wrap' }}>
               <Box>
-                <Typography variant="h6" sx={{ fontWeight: 800 }}>Questions</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 900 }}>Questions</Typography>
                 <Typography variant="body2" color="text.secondary">Create and organize quiz questions below.</Typography>
               </Box>
-              <Button startIcon={<AddIcon />} variant="contained" onClick={handleAddQuestion}>Add Question</Button>
+              <Button startIcon={<AddIcon />} variant="contained" onClick={handleAddQuestion} sx={{ minHeight: 42 }}>Add Question</Button>
             </Box>
 
             {quiz.questions.length === 0 ? (
@@ -374,22 +398,24 @@ export default function QuizEditorPage() {
           </Grid>
 
           <Grid item xs={12} lg={4}>
-            <Card sx={{ position: 'sticky', top: 96, borderRadius: 4, boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)' }}>
-              <CardContent>
+            <Card sx={{ position: 'sticky', top: 96, borderRadius: 5, boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)', border: '1px solid rgba(148, 163, 184, 0.14)' }}>
+              <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
                 <Stack spacing={2}>
-                  <Typography variant="h6" sx={{ fontWeight: 800 }}>Actions</Typography>
-                  <Typography variant="body2" color="text.secondary">Save your draft, publish it, or hide it from students.</Typography>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 900 }}>Actions</Typography>
+                    <Typography variant="body2" color="text.secondary">Save your draft, publish it, or hide it from students.</Typography>
+                  </Box>
                   <Divider />
-                  <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveDraft} disabled={saving || !isDirty} fullWidth>{saving ? 'Saving...' : 'Save Draft'}</Button>
+                  <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveDraft} disabled={saving || !isDirty} fullWidth sx={{ minHeight: 42 }}>{saving ? 'Saving...' : 'Save Draft'}</Button>
                   {quizId && (
                     <>
-                      {(!quiz.status || quiz.status === 'Draft' || quiz.status === 'DRAFT' || quiz.status === 'Hidden' || quiz.status === 'HIDDEN') && <Button startIcon={<DeleteIcon />} variant="outlined" color="error" onClick={() => setDeleteDialog(true)} disabled={saving} fullWidth>Delete Quiz</Button>}
-                      {(!quiz.status || quiz.status === 'Draft' || quiz.status === 'DRAFT') && <Button startIcon={<PublishIcon />} variant="contained" color="success" onClick={() => setPublishDialog(true)} disabled={saving} fullWidth>Publish</Button>}
-                      {(quiz.status === 'Published' || quiz.status === 'PUBLISHED') && <Button startIcon={<VisibilityOffIcon />} variant="outlined" color="warning" onClick={() => setHideDialog(true)} disabled={saving} fullWidth>Hide Quiz</Button>}
-                      {(quiz.status === 'Hidden' || quiz.status === 'HIDDEN') && <Button startIcon={<PublishIcon />} variant="contained" color="success" onClick={() => setPublishDialog(true)} disabled={saving} fullWidth>Publish Again</Button>}
+                      {(!quiz.status || quiz.status === 'Draft' || quiz.status === 'DRAFT' || quiz.status === 'Hidden' || quiz.status === 'HIDDEN') && <Button startIcon={<DeleteIcon />} variant="outlined" color="error" onClick={() => setDeleteDialog(true)} disabled={saving} fullWidth sx={{ minHeight: 42 }}>Delete Quiz</Button>}
+                      {(!quiz.status || quiz.status === 'Draft' || quiz.status === 'DRAFT') && <Button startIcon={<PublishIcon />} variant="contained" color="success" onClick={() => setPublishDialog(true)} disabled={saving} fullWidth sx={{ minHeight: 42 }}>Publish</Button>}
+                      {(quiz.status === 'Published' || quiz.status === 'PUBLISHED') && <Button startIcon={<VisibilityOffIcon />} variant="outlined" color="warning" onClick={() => setHideDialog(true)} disabled={saving} fullWidth sx={{ minHeight: 42 }}>Hide Quiz</Button>}
+                      {(quiz.status === 'Hidden' || quiz.status === 'HIDDEN') && <Button startIcon={<PublishIcon />} variant="contained" color="success" onClick={() => setPublishDialog(true)} disabled={saving} fullWidth sx={{ minHeight: 42 }}>Publish Again</Button>}
                     </>
                   )}
-                  <Button variant="text" onClick={() => navigate(-1)} fullWidth>Cancel</Button>
+                  <Button variant="text" onClick={() => navigate(-1)} fullWidth sx={{ minHeight: 42 }}>Cancel</Button>
                 </Stack>
               </CardContent>
             </Card>

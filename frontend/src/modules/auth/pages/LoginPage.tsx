@@ -136,7 +136,7 @@ export default function LoginPage() {
               </Box>
               <Box sx={{ p: 2, borderRadius: 3, bgcolor: '#f8fafc', border: '1px solid rgba(148, 163, 184, 0.18)' }}>
                 <Typography sx={{ fontWeight: 700 }}>Student</Typography>
-                <Typography variant="body2">pham.quoc.bao@school.edu.vn</Typography>
+                <Typography variant="body2">sv001@student.school.edu.vn</Typography>
                 <Typography variant="body2" color="text.secondary">Student@123</Typography>
               </Box>
             </Stack>

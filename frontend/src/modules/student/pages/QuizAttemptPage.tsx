@@ -191,12 +191,16 @@ export default function QuizAttemptPage() {
   if (loading) {
     return (
       <PageShell title="Quiz Attempt" subtitle="Answer questions carefully before time runs out">
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, py: 8 }}>
-          <CircularProgress />
-          <Typography variant="body2" color="text.secondary">
-            Loading quiz questions...
-          </Typography>
-        </Box>
+        <Card sx={{ borderRadius: 5, border: '1px solid rgba(148, 163, 184, 0.14)', boxShadow: '0 12px 32px rgba(15, 23, 42, 0.06)' }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, py: 8 }}>
+              <CircularProgress />
+              <Typography variant="body2" color="text.secondary">
+                Loading quiz questions...
+              </Typography>
+            </Box>
+          </CardContent>
+        </Card>
       </PageShell>
     );
   }
@@ -204,8 +208,12 @@ export default function QuizAttemptPage() {
   if (error) {
     return (
       <PageShell title="Quiz Attempt" subtitle="Answer questions carefully before time runs out">
-        <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
-        <Button onClick={() => navigate(-1)}>Go Back</Button>
+        <Card sx={{ borderRadius: 5, border: '1px solid rgba(148, 163, 184, 0.14)', boxShadow: '0 12px 32px rgba(15, 23, 42, 0.06)' }}>
+          <CardContent>
+            <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
+            <Button onClick={() => navigate(-1)} variant="outlined">Go Back</Button>
+          </CardContent>
+        </Card>
       </PageShell>
     );
   }
@@ -213,10 +221,14 @@ export default function QuizAttemptPage() {
   if (!quiz || !attemptId) {
     return (
       <PageShell title="Quiz Attempt" subtitle="Answer questions carefully before time runs out">
-        <Alert severity="error">Failed to load quiz</Alert>
-        <Button onClick={() => navigate(-1)} sx={{ mt: 2 }}>
-          Go Back
-        </Button>
+        <Card sx={{ borderRadius: 5, border: '1px solid rgba(148, 163, 184, 0.14)', boxShadow: '0 12px 32px rgba(15, 23, 42, 0.06)' }}>
+          <CardContent>
+            <Alert severity="error">Failed to load quiz</Alert>
+            <Button onClick={() => navigate(-1)} variant="outlined" sx={{ mt: 2 }}>
+              Go Back
+            </Button>
+          </CardContent>
+        </Card>
       </PageShell>
     );
   }
@@ -225,46 +237,55 @@ export default function QuizAttemptPage() {
   const progress = quiz.questions.length > 0 ? ((currentQuestionIndex + 1) / quiz.questions.length) * 100 : 0;
 
   if (!currentQuestion) {
-    return <PageShell title="Quiz Attempt" subtitle="Answer questions carefully before time runs out"><Alert severity="error">Question not found. Please try again.</Alert><Button onClick={() => navigate(-1)} sx={{ mt: 2 }}>Go Back</Button></PageShell>;
+    return (
+      <PageShell title="Quiz Attempt" subtitle="Answer questions carefully before time runs out">
+        <Card sx={{ borderRadius: 5, border: '1px solid rgba(148, 163, 184, 0.14)', boxShadow: '0 12px 32px rgba(15, 23, 42, 0.06)' }}>
+          <CardContent>
+            <Alert severity="error">Question not found. Please try again.</Alert>
+            <Button onClick={() => navigate(-1)} variant="outlined" sx={{ mt: 2 }}>Go Back</Button>
+          </CardContent>
+        </Card>
+      </PageShell>
+    );
   }
 
   return (
     <PageShell title={quiz.title} subtitle={quiz.description || 'Quiz in progress'}>
-      <Card sx={{ mb: 3, borderRadius: 4, boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)' }}>
-        <CardContent>
-          <Stack spacing={2}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+      <Card sx={{ mb: 3, borderRadius: 5, border: '1px solid rgba(148, 163, 184, 0.14)', boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)', background: 'linear-gradient(135deg, rgba(15, 118, 110, 0.06) 0%, #ffffff 100%)' }}>
+        <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
+          <Stack spacing={2.5}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2, flexWrap: 'wrap' }}>
               <Box>
-                <Typography variant="h5" sx={{ fontWeight: 800 }}>{quiz.title}</Typography>
-                <Typography variant="body2" color="text.secondary">{quiz.description}</Typography>
+                <Chip label="Quiz in progress" color={timeExpired ? 'error' : 'success'} variant="outlined" size="small" sx={{ mb: 1 }} />
+                <Typography variant="h5" sx={{ fontWeight: 900, lineHeight: 1.2 }}>{quiz.title || 'Untitled quiz'}</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>{quiz.description || 'Answer each question carefully before submitting.'}</Typography>
               </Box>
               <Stack direction="row" spacing={1} flexWrap="wrap">
                 <Chip label={`${quiz.questions.length} questions`} variant="outlined" />
                 <Chip label={`${quiz.timeLimitMinutes} minutes`} color="primary" variant="outlined" />
-                <Chip label={timeExpired ? 'Time expired' : 'In progress'} color={timeExpired ? 'error' : 'success'} variant="outlined" />
               </Stack>
             </Box>
             {!timeExpired && <QuizTimer initialSeconds={quiz.timeLimitMinutes * 60} onTimeExpired={handleTimeExpired} />}
-            {timeExpired && <Alert severity="error">⏰ Time expired! Your quiz has been auto-submitted.</Alert>}
+            {timeExpired && <Alert severity="error">Your time expired and the quiz was auto-submitted.</Alert>}
             <LinearProgress variant="determinate" value={progress} sx={{ height: 10, borderRadius: 999 }} />
             <Typography variant="body2" color="text.secondary">Question {currentQuestionIndex + 1} of {quiz.questions.length}</Typography>
           </Stack>
         </CardContent>
       </Card>
 
-      <Card sx={{ borderRadius: 4, boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)', mb: 3 }}>
-        <CardContent>
+      <Card sx={{ borderRadius: 5, border: '1px solid rgba(148, 163, 184, 0.14)', boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)', mb: 3 }}>
+        <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
           <QuestionDisplay questionNumber={currentQuestionIndex + 1} totalQuestions={quiz.questions.length} question={currentQuestion} selectedAnswers={answers.get(currentQuestion.id) || []} onChange={(selectedOptionIds) => handleAnswerChange(currentQuestion.id, selectedOptionIds)} />
         </CardContent>
       </Card>
 
       <Box sx={{ display: 'flex', gap: 2, justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
-        <Button variant="outlined" onClick={handlePreviousQuestion} disabled={currentQuestionIndex === 0 || submitting}>← Previous</Button>
+        <Button variant="outlined" onClick={handlePreviousQuestion} disabled={currentQuestionIndex === 0 || submitting} sx={{ minHeight: 42 }}>← Previous</Button>
         <Typography variant="body2" sx={{ fontWeight: 700 }}>{currentQuestionIndex + 1} / {quiz.questions.length}</Typography>
         {currentQuestionIndex === quiz.questions.length - 1 ? (
-          <Button variant="contained" color="success" onClick={handleSubmitClick} disabled={submitting}>{submitting ? 'Submitting...' : 'Submit Quiz'}</Button>
+          <Button variant="contained" color="success" onClick={handleSubmitClick} disabled={submitting} sx={{ minHeight: 42 }}>{submitting ? 'Submitting...' : 'Submit Quiz'}</Button>
         ) : (
-          <Button variant="contained" onClick={handleNextQuestion} disabled={submitting}>Next →</Button>
+          <Button variant="contained" onClick={handleNextQuestion} disabled={submitting} sx={{ minHeight: 42 }}>Next →</Button>
         )}
       </Box>
 

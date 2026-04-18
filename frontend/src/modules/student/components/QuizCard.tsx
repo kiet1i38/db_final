@@ -32,76 +32,50 @@ export default function QuizCard({ quiz, sectionId, onStartQuiz, onViewResult }:
     onViewResultDefined: !!onViewResult,
   });
 
+  const questionCount = quiz.totalQuestions ?? quiz.questions?.length ?? 0;
+
   return (
     <Card sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CardContent sx={{ flexGrow: 1 }}>
-        {/* Title */}
-        <Typography variant="h6" component="div" sx={{ mb: 1 }}>
-          {quiz.title}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1, mb: 1.5 }}>
+          <Typography variant="h6" component="div" sx={{ fontWeight: 800, lineHeight: 1.2 }}>
+            {quiz.title || 'Untitled quiz'}
+          </Typography>
+          <Chip
+            label={isExpired ? 'Closed' : 'Open'}
+            size="small"
+            color={isExpired ? 'default' : 'success'}
+            variant="outlined"
+            sx={{ flexShrink: 0 }}
+          />
+        </Box>
+
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, minHeight: 40 }}>
+          {(quiz.description || 'No description provided.').length > 100
+            ? (quiz.description || 'No description provided.').substring(0, 100) + '...'
+            : (quiz.description || 'No description provided.')}
         </Typography>
 
-        {/* Description */}
-        {quiz.description && (
-          <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-            {quiz.description.length > 100
-              ? quiz.description.substring(0, 100) + '...'
-              : quiz.description}
-          </Typography>
-        )}
-
-        {/* Quiz Details */}
         <Stack spacing={1} sx={{ mb: 2 }}>
-          {/* Time Limit */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="caption" color="textSecondary">
-              ⏱️ Time Limit:
-            </Typography>
-            <Typography variant="caption" sx={{ fontWeight: 600 }}>
-              {quiz.timeLimitMinutes} minutes
-            </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
+            <Typography variant="caption" color="text.secondary">Time limit</Typography>
+            <Typography variant="caption" sx={{ fontWeight: 700 }}>{quiz.timeLimitMinutes} minutes</Typography>
           </Box>
-
-          {/* Max Score */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="caption" color="textSecondary">
-              📊 Max Score:
-            </Typography>
-            <Typography variant="caption" sx={{ fontWeight: 600 }}>
-              {quiz.maxScore} points
-            </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
+            <Typography variant="caption" color="text.secondary">Questions</Typography>
+            <Typography variant="caption" sx={{ fontWeight: 700 }}>{questionCount}</Typography>
           </Box>
-
-          {/* Max Attempts */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="caption" color="textSecondary">
-              🔁 Max Attempts:
-            </Typography>
-            <Typography variant="caption" sx={{ fontWeight: 600 }}>
-              {quiz.maxAttempts}
-            </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
+            <Typography variant="caption" color="text.secondary">Attempts</Typography>
+            <Typography variant="caption" sx={{ fontWeight: 700 }}>{quiz.maxAttempts}</Typography>
           </Box>
-
-          {/* Deadline */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="caption" color="textSecondary">
-              📅 Deadline:
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{
-                fontWeight: 600,
-                color: isExpired ? 'error.main' : 'textPrimary',
-              }}
-            >
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
+            <Typography variant="caption" color="text.secondary">Deadline</Typography>
+            <Typography variant="caption" sx={{ fontWeight: 700, color: isExpired ? 'error.main' : 'text.primary' }}>
               {formatters.formatDate(new Date(quiz.deadlineAt))}
             </Typography>
           </Box>
         </Stack>
-
-        {/* Status Badge */}
-        {isExpired && (
-          <Chip label="Expired" size="small" color="error" variant="outlined" sx={{ mt: 1 }} />
-        )}
       </CardContent>
 
       <CardActions sx={{ pt: 0, gap: 1 }}>
@@ -112,6 +86,7 @@ export default function QuizCard({ quiz, sectionId, onStartQuiz, onViewResult }:
           disabled={isExpired}
           color="primary"
           variant="contained"
+          sx={{ minHeight: 40 }}
         >
           Take Quiz
         </Button>
@@ -121,6 +96,7 @@ export default function QuizCard({ quiz, sectionId, onStartQuiz, onViewResult }:
           onClick={onViewResult}
           color="secondary"
           variant="outlined"
+          sx={{ minHeight: 40 }}
         >
           View Result
         </Button>

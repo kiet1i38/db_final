@@ -21,7 +21,6 @@ import { useAuth } from '../../shared';
 import { academicService } from '../services/academicService';
 import { quizService } from '../services/quizService';
 import { Section, Quiz } from '../../shared/types';
-import { formatters } from '../../shared/utils/formatters';
 
 export default function SectionDetailsPage() {
   const { sectionId } = useParams<{ sectionId: string }>();
@@ -97,9 +96,9 @@ export default function SectionDetailsPage() {
                 <Typography variant="body2" color="text.secondary">Student: {state.user?.fullName || state.user?.email}</Typography>
               </Box>
               <Stack direction="row" spacing={1} flexWrap="wrap">
-                <Chip label={section.sectionCode} color="primary" variant="outlined" />
-                <Chip label={section.courseCode} variant="outlined" />
-                <Chip label={section.facultyCode} variant="outlined" />
+                {section.sectionCode && <Chip label={section.sectionCode} color="primary" variant="outlined" />}
+                {section.courseCode && <Chip label={section.courseCode} variant="outlined" />}
+                {section.facultyCode && <Chip label={section.facultyCode} variant="outlined" />}
                 <Chip label={section.term && section.academicYear ? `${section.term} ${section.academicYear}` : 'Current'} variant="outlined" />
               </Stack>
             </Stack>
@@ -108,27 +107,19 @@ export default function SectionDetailsPage() {
       )}
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={6}>
           <Card sx={{ borderRadius: 4, boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)' }}>
             <CardContent>
-              <Typography color="text.secondary" gutterBottom>Total Quizzes</Typography>
+              <Typography color="text.secondary" gutterBottom>Available Quizzes</Typography>
               <Typography variant="h4" sx={{ fontWeight: 800 }}>{quizzes.length}</Typography>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={6}>
           <Card sx={{ borderRadius: 4, boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)' }}>
             <CardContent>
-              <Typography color="text.secondary" gutterBottom>Published</Typography>
-              <Typography variant="h4" sx={{ fontWeight: 800, color: 'success.main' }}>{quizzes.filter((q) => String(q.status).toUpperCase() === 'PUBLISHED').length}</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <Card sx={{ borderRadius: 4, boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)' }}>
-            <CardContent>
-              <Typography color="text.secondary" gutterBottom>Upcoming</Typography>
-              <Typography variant="h4" sx={{ fontWeight: 800, color: 'primary.main' }}>{quizzes.length}</Typography>
+              <Typography color="text.secondary" gutterBottom>Ready to Start</Typography>
+              <Typography variant="h4" sx={{ fontWeight: 800, color: 'success.main' }}>{quizzes.length}</Typography>
             </CardContent>
           </Card>
         </Grid>
@@ -142,7 +133,7 @@ export default function SectionDetailsPage() {
       </Box>
 
       {quizzes.length === 0 ? (
-        <Alert severity="info">No published quizzes available yet.</Alert>
+        <Alert severity="info">No quizzes available yet.</Alert>
       ) : (
         <Grid container spacing={3}>
           {quizzes.map((quiz) => (
@@ -150,13 +141,15 @@ export default function SectionDetailsPage() {
               <Card sx={{ borderRadius: 4, boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)', height: '100%' }}>
                 <CardContent>
                   <Stack spacing={1.5}>
-                    <Chip label={String(quiz.status)} size="small" color="primary" variant="outlined" sx={{ width: 'fit-content' }} />
-                    <Typography variant="h6" sx={{ fontWeight: 800 }}>{quiz.title}</Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
+                      <Chip label="Available" size="small" color="success" variant="outlined" sx={{ width: 'fit-content' }} />
+                      {quiz.maxAttempts ? <Chip label={`${quiz.maxAttempts} attempts`} size="small" variant="outlined" /> : null}
+                    </Box>
+                    <Typography variant="h6" sx={{ fontWeight: 800 }}>{quiz.title || 'Untitled quiz'}</Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ minHeight: 42 }}>{quiz.description || 'No description provided.'}</Typography>
                     <Stack direction="row" spacing={1} flexWrap="wrap">
-                      <Chip label={`${quiz.timeLimitMinutes} min`} size="small" />
-                      <Chip label={`${quiz.maxAttempts} attempts`} size="small" />
-                      <Chip label={formatters.formatScore(quiz.maxScore, quiz.maxScore)} size="small" />
+                      <Chip label={`${quiz.timeLimitMinutes || 0} min`} size="small" />
+                      <Chip label={`${quiz.totalQuestions ?? quiz.questions?.length ?? 0} questions`} size="small" />
                     </Stack>
                   </Stack>
                 </CardContent>

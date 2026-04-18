@@ -8,6 +8,7 @@ import {
   RadioGroup,
   FormGroup,
   Paper,
+  Chip,
 } from '@mui/material';
 import { Question, AnswerOption } from '../../shared/types';
 
@@ -41,18 +42,28 @@ export default function QuestionDisplay({
   const isSingleChoice = question.questionType === 'SINGLE_CHOICE';
 
   return (
-    <Paper sx={{ p: 3, mb: 3 }}>
-      {/* Question Header */}
-      <Box sx={{ mb: 2 }}>
-        <Typography variant="caption" sx={{ color: 'textSecondary', fontWeight: 600 }}>
-          Question {questionNumber} of {totalQuestions}
-        </Typography>
-        <Typography variant="h5" sx={{ mt: 1, fontWeight: 600 }}>
-          {question.content}
-        </Typography>
+    <Paper
+      sx={{
+        p: { xs: 2.5, md: 3 },
+        mb: 3,
+        borderRadius: 4,
+        border: '1px solid rgba(148, 163, 184, 0.14)',
+        boxShadow: '0 12px 32px rgba(15, 23, 42, 0.06)',
+      }}
+    >
+      <Box sx={{ mb: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
+        <Box>
+          <Chip label={`Question ${questionNumber}`} color="primary" variant="outlined" size="small" sx={{ mb: 1 }} />
+          <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
+            {questionNumber} of {totalQuestions}
+          </Typography>
+        </Box>
+        <Chip label={isSingleChoice ? 'Single choice' : 'Multiple choice'} size="small" variant="outlined" />
       </Box>
+      <Typography variant="h5" sx={{ fontWeight: 900, lineHeight: 1.25 }}>
+        {question.content}
+      </Typography>
 
-      {/* Options */}
       <Box sx={{ mt: 3 }}>
         {isSingleChoice ? (
           // Single Choice - Radio Buttons
@@ -65,21 +76,17 @@ export default function QuestionDisplay({
                 key={option.id}
                 value={option.id}
                 control={<Radio />}
-                label={
-                  <Typography sx={{ ml: 1 }}>
-                    {option.content}
-                  </Typography>
-                }
+                label={<Typography sx={{ ml: 1, fontWeight: 500 }}>{option.content}</Typography>}
                 sx={{
                   p: 1.5,
                   mb: 1,
-                  border: '1px solid #e0e0e0',
-                  borderRadius: 1,
+                  border: '1px solid rgba(148, 163, 184, 0.18)',
+                  borderRadius: 2,
                   '&:hover': {
-                    backgroundColor: '#f5f5f5',
+                    backgroundColor: '#f8fafc',
                   },
-                  backgroundColor: selectedAnswers[0] === option.id ? '#f0f7ff' : 'transparent',
-                  transition: 'background-color 0.2s',
+                  backgroundColor: selectedAnswers[0] === option.id ? 'rgba(15, 118, 110, 0.08)' : 'transparent',
+                  transition: 'background-color 0.2s ease',
                 }}
               />
             ))}
@@ -96,23 +103,19 @@ export default function QuestionDisplay({
                     onChange={(e) => handleMultipleChoice(option.id, e.target.checked)}
                   />
                 }
-                label={
-                  <Typography sx={{ ml: 1 }}>
-                    {option.content}
-                  </Typography>
-                }
+                label={<Typography sx={{ ml: 1, fontWeight: 500 }}>{option.content}</Typography>}
                 sx={{
                   p: 1.5,
                   mb: 1,
-                  border: '1px solid #e0e0e0',
-                  borderRadius: 1,
+                  border: '1px solid rgba(148, 163, 184, 0.18)',
+                  borderRadius: 2,
                   '&:hover': {
-                    backgroundColor: '#f5f5f5',
+                    backgroundColor: '#f8fafc',
                   },
                   backgroundColor: selectedAnswers.includes(option.id)
-                    ? '#f0f7ff'
+                    ? 'rgba(15, 118, 110, 0.08)'
                     : 'transparent',
-                  transition: 'background-color 0.2s',
+                  transition: 'background-color 0.2s ease',
                 }}
               />
             ))}
@@ -122,8 +125,8 @@ export default function QuestionDisplay({
 
       {/* Hint */}
       {!isSingleChoice && (
-        <Typography variant="caption" sx={{ display: 'block', mt: 2, color: 'info.main' }}>
-          ℹ️ Select all that apply
+        <Typography variant="caption" sx={{ display: 'block', mt: 2, color: 'info.main', fontWeight: 700 }}>
+          Select all that apply
         </Typography>
       )}
     </Paper>
