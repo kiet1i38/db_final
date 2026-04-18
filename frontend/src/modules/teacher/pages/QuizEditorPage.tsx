@@ -55,11 +55,14 @@ export default function QuizEditorPage() {
   const [hideDialog, setHideDialog] = useState(false);
 
   useEffect(() => {
-    if (quizId) {
-      const loadQuiz = async () => {
+    let mounted = true;
+
+    const initialize = async () => {
+      if (quizId) {
         try {
           setLoading(true);
           const data = await quizService.getQuiz(quizId);
+          if (!mounted) return;
           setQuiz({
             ...data,
             questions: data.questions.map((q) => ({
@@ -80,16 +83,19 @@ export default function QuizEditorPage() {
           setDeadlineAt(new Date(data.deadlineAt).toISOString().split('T')[0]);
         } catch (err) {
           showNotification(err instanceof Error ? err.message : 'Failed to load quiz', 'error');
-          navigate(-1);
+          navigate(-1, { replace: true });
         } finally {
-          setLoading(false);
+          if (mounted) setLoading(false);
         }
-      };
-      loadQuiz();
-    } else if (!sectionId) {
-      showNotification('Section ID is required to create a quiz', 'error');
-      navigate(-1);
-    } else if (!quiz) {
+        return;
+      }
+
+      if (!sectionId) {
+        showNotification('Section ID is required to create a quiz', 'error');
+        navigate(-1, { replace: true });
+        return;
+      }
+
       setQuiz({
         id: '',
         quizId: '',
@@ -105,8 +111,13 @@ export default function QuizEditorPage() {
         questions: [],
       });
       setLoading(false);
-    }
-  }, [quizId, sectionId, navigate, showNotification, quiz]);
+    };
+
+    initialize();
+    return () => {
+      mounted = false;
+    };
+  }, [quizId, sectionId, navigate, showNotification]);
 
   const handleAddQuestion = () => {
     if (!quiz) return;
@@ -207,9 +218,25 @@ export default function QuizEditorPage() {
             answerOptions: question.answerOptions.map((opt) => ({ content: opt.content, isCorrect: opt.isCorrect })),
           });
         }
+        navigate(`/teacher/quiz/${newQuiz.quizId || newQuiz.id}/edit`, { replace: true });
       }
       showNotification('Quiz saved successfully!', 'success');
       setIsDirty(false);
+      if (quizId) {
+        const refreshed = await quizService.getQuiz(quizId);
+        setQuiz({
+          ...refreshed,
+          questions: refreshed.questions.map((q) => ({
+            ...q,
+            fromBackend: true,
+            __original: JSON.stringify({
+              content: q.content,
+              questionType: q.questionType,
+              answerOptions: q.answerOptions.map((o) => ({ content: o.content, isCorrect: o.isCorrect })),
+            }),
+          })),
+        });
+      }
     } catch (err) {
       showNotification(err instanceof Error ? err.message : 'Failed to save quiz', 'error');
     } finally {
@@ -218,13 +245,27 @@ export default function QuizEditorPage() {
   };
 
   const handlePublish = async () => {
-    if (!quizId) return showNotification('Save quiz first before publishing', 'error');
+    if (!quizId || !quiz) return showNotification('Save quiz first before publishing', 'error');
     try {
       setSaving(true);
       await quizService.publishQuiz(quizId);
       setPublishDialog(false);
-      setQuiz(await quizService.getQuiz(quizId));
+      const updated = await quizService.getQuiz(quizId);
+      setQuiz({
+        ...updated,
+        questions: updated.questions.map((q) => ({
+          ...q,
+          fromBackend: true,
+          __original: JSON.stringify({
+            content: q.content,
+            questionType: q.questionType,
+            answerOptions: q.answerOptions.map((o) => ({ content: o.content, isCorrect: o.isCorrect })),
+          }),
+        })),
+      });
+      setIsDirty(false);
       showNotification('Quiz published successfully!', 'success');
+      navigate(`/teacher/quiz/${quizId}/edit`, { replace: true });
     } catch (err) {
       showNotification(err instanceof Error ? err.message : 'Failed to publish quiz', 'error');
     } finally {
@@ -233,13 +274,27 @@ export default function QuizEditorPage() {
   };
 
   const handleHide = async () => {
-    if (!quizId) return;
+    if (!quizId || !quiz) return;
     try {
       setSaving(true);
       await quizService.hideQuiz(quizId);
       setHideDialog(false);
-      setQuiz(await quizService.getQuiz(quizId));
+      const updated = await quizService.getQuiz(quizId);
+      setQuiz({
+        ...updated,
+        questions: updated.questions.map((q) => ({
+          ...q,
+          fromBackend: true,
+          __original: JSON.stringify({
+            content: q.content,
+            questionType: q.questionType,
+            answerOptions: q.answerOptions.map((o) => ({ content: o.content, isCorrect: o.isCorrect })),
+          }),
+        })),
+      });
+      setIsDirty(false);
       showNotification('Quiz hidden successfully!', 'success');
+      navigate(`/teacher/quiz/${quizId}/edit`, { replace: true });
     } catch (err) {
       showNotification(err instanceof Error ? err.message : 'Failed to hide quiz', 'error');
     } finally {

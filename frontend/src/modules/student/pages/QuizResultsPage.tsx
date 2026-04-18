@@ -195,7 +195,17 @@ export default function QuizResultsPage() {
       )}
 
       <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
-        <Button variant="contained" onClick={() => navigate(-1)}>Retry Quiz</Button>
+        <Button
+          variant="contained"
+          onClick={() => {
+            navigate(`/student/quiz/${quizId}/attempt`, {
+              replace: true,
+              state: { sectionId },
+            });
+          }}
+        >
+          Retry Quiz
+        </Button>
       </Box>
     </PageShell>
   );

@@ -33,6 +33,14 @@ class ApiClient {
             data: config.data,
           });
         }
+
+        // Prevent stale cached quiz-attempt responses from keeping the page stuck
+        if (config.method?.toLowerCase() === 'get' && config.url?.includes('/quizzes/')) {
+          config.headers = config.headers ?? {};
+          config.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+          config.headers['Pragma'] = 'no-cache';
+          config.headers['Expires'] = '0';
+        }
         return config;
       },
       (error) => {

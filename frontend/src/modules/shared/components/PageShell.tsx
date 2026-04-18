@@ -14,25 +14,33 @@ import { USER_ROLES } from '../utils/constants';
 const drawerWidth = 280;
 
 const getNavGroups = (role?: string) => {
-  const base = [
+  const dashboardPath = role === USER_ROLES.ADMIN ? '/admin/dashboard' : role === USER_ROLES.TEACHER ? '/teacher/dashboard' : '/student/dashboard';
+  const coursesPath = `${dashboardPath}?view=courses`;
+  const quizzesPath = role === USER_ROLES.TEACHER ? '/teacher/quiz/new' : `${dashboardPath}?view=quizzes`;
+  const analyticsPath = `${dashboardPath}?view=analytics`;
+
+  return [
     {
       title: 'Main',
       items: [
-        { label: 'Dashboard', path: role === USER_ROLES.ADMIN ? '/admin/dashboard' : role === USER_ROLES.TEACHER ? '/teacher/dashboard' : '/student/dashboard', icon: <DashboardRoundedIcon /> },
-        { label: 'Courses', path: role === USER_ROLES.ADMIN ? '/admin/dashboard' : role === USER_ROLES.TEACHER ? '/teacher/dashboard' : '/student/dashboard', icon: <SchoolRoundedIcon /> },
-        { label: 'Quizzes', path: role === USER_ROLES.ADMIN ? '/admin/dashboard' : role === USER_ROLES.TEACHER ? '/teacher/dashboard' : '/student/dashboard', icon: <QuizRoundedIcon /> },
-        { label: 'Analytics', path: role === USER_ROLES.ADMIN ? '/admin/dashboard' : role === USER_ROLES.TEACHER ? '/teacher/dashboard' : '/student/dashboard', icon: <AnalyticsRoundedIcon /> },
+        { label: 'Dashboard', path: dashboardPath, icon: <DashboardRoundedIcon /> },
+        { label: 'Courses', path: coursesPath, icon: <SchoolRoundedIcon /> },
+        { label: 'Quizzes', path: quizzesPath, icon: <QuizRoundedIcon /> },
+        { label: 'Analytics', path: analyticsPath, icon: <AnalyticsRoundedIcon /> },
       ],
     },
   ];
-
-  return base;
 };
 
 export default function PageShell({ children, title, subtitle, actionLabel, onAction }: { children: React.ReactNode; title?: string; subtitle?: string; actionLabel?: string; onAction?: () => void; }) {
   const navigate = useNavigate();
-  const { state } = useAuth();
+  const { state, logout } = useAuth();
   const homePath = state.user?.role === USER_ROLES.ADMIN ? '/admin/dashboard' : state.user?.role === USER_ROLES.TEACHER ? '/teacher/dashboard' : '/student/dashboard';
+
+  const handleSignOut = async () => {
+    await logout();
+    navigate('/login', { replace: true });
+  };
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f6f8fc' }}>
@@ -62,7 +70,7 @@ export default function PageShell({ children, title, subtitle, actionLabel, onAc
             <Box sx={{ p: 2, borderRadius: 4, bgcolor: '#ecfeff' }}>
               <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>Need help?</Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>Check your notifications or contact support.</Typography>
-              <Button fullWidth variant="contained" onClick={() => navigate('/login')}>Sign out</Button>
+              <Button fullWidth variant="contained" onClick={handleSignOut}>Sign out</Button>
             </Box>
           </Box>
         </Stack>

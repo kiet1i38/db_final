@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
@@ -18,7 +18,6 @@ import {
 } from '@mui/material';
 import PageShell from '../../shared/components/PageShell';
 import { useNotification } from '../../shared';
-import { quizService } from '../services/quizService';
 import { attemptService } from '../services/attemptService';
 import { Quiz, SubmitAttemptRequest } from '../../shared/types';
 import QuizTimer from '../components/QuizTimer';
@@ -40,31 +39,110 @@ export default function QuizAttemptPage() {
   const [answers, setAnswers] = useState<Map<string, string[]>>(new Map());
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const [timeExpired, setTimeExpired] = useState(false);
+  const submittingRef = useRef(false);
+  const expiredRef = useRef(false);
+  const initializedRef = useRef(false);
+  const initRunIdRef = useRef(0);
+
+  const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number, timeoutMessage: string) => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const timeoutPromise = new Promise<T>((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
+    });
+
+    return Promise.race([promise, timeoutPromise]).finally(() => {
+      if (timeoutId) clearTimeout(timeoutId);
+    });
+  };
 
   useEffect(() => {
+    let cancelled = false;
+
+    setQuiz(null);
+    setAttemptId(null);
+    setAnswers(new Map());
+    setCurrentQuestionIndex(0);
+    setShowSubmitConfirm(false);
+    setTimeExpired(false);
+    setError(null);
+    setLoading(true);
+    initializedRef.current = false;
+    expiredRef.current = false;
+    const runId = ++initRunIdRef.current;
+
     const initializeAttempt = async () => {
-      if (!quizId) return;
+      if (!quizId || initializedRef.current) return;
+      submittingRef.current = true;
+      initializedRef.current = true;
       try {
-        setLoading(true);
-        const quizData = await quizService.getQuizForAttempt(quizId);
-        setQuiz(quizData);
-        const attemptData = await attemptService.startAttempt(quizId);
-        setAttemptId(attemptData.id);
+        setError(null);
+        if (runId !== initRunIdRef.current) return;
+
+        const attemptData = await withTimeout(
+          attemptService.startAttempt(quizId),
+          8000,
+          'Quiz attempt could not be started. Please refresh and try again.'
+        );
+
+        if (cancelled || runId !== initRunIdRef.current) return;
+
+        if (!attemptData.questions?.length) {
+          throw new Error('Quiz attempt started but no questions were returned.');
+        }
+
+        setAttemptId(attemptData.attemptId);
+
+        setQuiz({
+          id: attemptData.quizId,
+          quizId: attemptData.quizId,
+          teacherId: '',
+          sectionId: '',
+          title: attemptData.quizTitle || 'Quiz Attempt',
+          description: attemptData.description || '',
+          timeLimitMinutes: attemptData.timeLimitMinutes,
+          deadlineAt: attemptData.expiresAt,
+          maxAttempts: 1,
+          maxScore: attemptData.maxScore,
+          status: 'PUBLISHED',
+          questions: attemptData.questions,
+          totalQuestions: attemptData.totalQuestions,
+          questionPoints: attemptData.totalQuestions > 0 ? attemptData.maxScore / attemptData.totalQuestions : 0,
+        });
+
         const answersMap = new Map<string, string[]>();
-        quizData.questions.forEach((q) => answersMap.set(q.id, []));
+        attemptData.questions.forEach((q) => answersMap.set(q.id, []));
         setAnswers(answersMap);
+        setCurrentQuestionIndex(0);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to start quiz');
+        if (!cancelled && runId === initRunIdRef.current) {
+          const normalizedError = err instanceof Error ? err : new Error('Failed to start quiz');
+          setError(normalizedError.message);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled && runId === initRunIdRef.current) setLoading(false);
+        submittingRef.current = false;
       }
     };
+
     initializeAttempt();
+
+    return () => {
+      cancelled = true;
+    };
   }, [quizId]);
 
   const handleTimeExpired = async () => {
+    if (expiredRef.current) return;
+    expiredRef.current = true;
     setTimeExpired(true);
-    await handleSubmit();
+    try {
+      setSubmitting(true);
+      await submitCurrentAttempt();
+    } catch (err) {
+      showNotification(err instanceof Error ? err.message : 'Failed to submit quiz', 'error');
+      setSubmitting(false);
+      expiredRef.current = false;
+    }
   };
 
   const handleAnswerChange = (questionId: string, selectedOptionIds: string[]) => {
@@ -82,19 +160,28 @@ export default function QuizAttemptPage() {
 
   const handleSubmitClick = () => setShowSubmitConfirm(true);
 
+  const submitCurrentAttempt = async () => {
+    if (!attemptId || !quizId || !quiz) return;
+
+    const submitData: SubmitAttemptRequest = {
+      answers: quiz.questions.map((q) => ({ questionId: q.id, selectedOptionIds: answers.get(q.id) || [] })),
+    };
+
+    const submitResponse = await attemptService.submitAttempt(attemptId, submitData);
+    showNotification('Quiz submitted successfully!', 'success');
+    setShowSubmitConfirm(false);
+    initializedRef.current = false;
+    navigate(`/student/quiz/${quizId}/results/${attemptId}`, {
+      replace: true,
+      state: { submissionResponse: submitResponse, sectionId },
+    });
+  };
+
   const handleSubmit = async () => {
     if (!attemptId || !quiz) return;
     try {
       setSubmitting(true);
-      const submitData: SubmitAttemptRequest = {
-        answers: quiz.questions.map((q) => ({ questionId: q.id, selectedOptionIds: answers.get(q.id) || [] })),
-      };
-      const submitResponse = await attemptService.submitAttempt(attemptId, submitData);
-      showNotification('Quiz submitted successfully!', 'success');
-      setShowSubmitConfirm(false);
-      setTimeout(() => {
-        navigate(`/student/quiz/${quizId}/results/${attemptId}`, { state: { submissionResponse: submitResponse, sectionId } });
-      }, 300);
+      await submitCurrentAttempt();
     } catch (err) {
       showNotification(err instanceof Error ? err.message : 'Failed to submit quiz', 'error');
       setSubmitting(false);
@@ -102,11 +189,36 @@ export default function QuizAttemptPage() {
   };
 
   if (loading) {
-    return <PageShell title="Quiz Attempt" subtitle="Answer questions carefully before time runs out"><Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}><CircularProgress /></Box></PageShell>;
+    return (
+      <PageShell title="Quiz Attempt" subtitle="Answer questions carefully before time runs out">
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, py: 8 }}>
+          <CircularProgress />
+          <Typography variant="body2" color="text.secondary">
+            Loading quiz questions...
+          </Typography>
+        </Box>
+      </PageShell>
+    );
+  }
+
+  if (error) {
+    return (
+      <PageShell title="Quiz Attempt" subtitle="Answer questions carefully before time runs out">
+        <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
+        <Button onClick={() => navigate(-1)}>Go Back</Button>
+      </PageShell>
+    );
   }
 
   if (!quiz || !attemptId) {
-    return <PageShell title="Quiz Attempt" subtitle="Answer questions carefully before time runs out"><Alert severity="error">{error || 'Failed to load quiz'}</Alert><Button onClick={() => navigate(-1)} sx={{ mt: 2 }}>Go Back</Button></PageShell>;
+    return (
+      <PageShell title="Quiz Attempt" subtitle="Answer questions carefully before time runs out">
+        <Alert severity="error">Failed to load quiz</Alert>
+        <Button onClick={() => navigate(-1)} sx={{ mt: 2 }}>
+          Go Back
+        </Button>
+      </PageShell>
+    );
   }
 
   const currentQuestion = quiz.questions[currentQuestionIndex];
@@ -158,10 +270,18 @@ export default function QuizAttemptPage() {
 
       <Dialog open={showSubmitConfirm} onClose={() => setShowSubmitConfirm(false)}>
         <DialogTitle>Submit Quiz?</DialogTitle>
-        <DialogContent><Typography>Are you sure you want to submit your quiz? You won't be able to make changes after submitting.</Typography></DialogContent>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to submit your quiz? You won't be able to make changes after submitting.
+          </Typography>
+        </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowSubmitConfirm(false)} disabled={submitting}>Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained" color="success" disabled={submitting}>{submitting ? 'Submitting...' : 'Submit'}</Button>
+          <Button onClick={() => setShowSubmitConfirm(false)} disabled={submitting}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} variant="contained" color="success" disabled={submitting}>
+            {submitting ? 'Submitting...' : 'Submit'}
+          </Button>
         </DialogActions>
       </Dialog>
     </PageShell>

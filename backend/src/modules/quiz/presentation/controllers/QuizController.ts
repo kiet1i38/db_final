@@ -174,7 +174,14 @@ export class QuizController {
       const result = await this.getQuizForAttemptUseCase.execute(
         req.params.quizId
       );
-      res.status(200).json(result);
+      res.status(200).json({
+        data: {
+          quiz: result,
+          ...result,
+        },
+        quiz: result,
+        ...result,
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Lỗi không xác định.";
       res.status(mapErrorToStatus(message)).json({ message });

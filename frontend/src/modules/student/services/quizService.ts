@@ -25,8 +25,21 @@ export const quizService = {
   },
 
   async getQuizForAttempt(quizId: string): Promise<Quiz> {
-    const response = await api.get<any>(`/quizzes/${quizId}/attempt`);
-    return normalizeQuiz(response.data);
+    const response = await api.get<any>(`/quizzes/${quizId}/attempt`, {
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: '0',
+      },
+    });
+    const data = response.data?.data ?? response.data;
+    const quiz = normalizeQuiz(data);
+
+    if (quiz.questions.length === 0 && Array.isArray((data as any)?.questions)) {
+      console.warn('Quiz attempt response contained questions but normalization failed', data);
+    }
+
+    return quiz;
   },
 
   async updateQuiz(quizId: string, data: UpdateQuizRequest): Promise<Quiz> {
