@@ -42,7 +42,7 @@ export default function QuizAttemptPage() {
   const submittingRef = useRef(false);
   const expiredRef = useRef(false);
   const initializedRef = useRef(false);
-  const initRunIdRef = useRef(0);
+  const initializedQuizIdRef = useRef<string | null>(null);
 
   const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number, timeoutMessage: string) => {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -64,34 +64,31 @@ export default function QuizAttemptPage() {
     setCurrentQuestionIndex(0);
     setShowSubmitConfirm(false);
     setTimeExpired(false);
-    setError(null);
+        setError(null);
     setLoading(true);
     initializedRef.current = false;
     expiredRef.current = false;
-    const runId = ++initRunIdRef.current;
 
     const initializeAttempt = async () => {
-      if (!quizId || initializedRef.current) return;
+      if (!quizId) return;
+      if (initializedRef.current && initializedQuizIdRef.current === quizId) return;
+      if (submittingRef.current) return;
       submittingRef.current = true;
       initializedRef.current = true;
+      initializedQuizIdRef.current = quizId;
       try {
         setError(null);
-        if (runId !== initRunIdRef.current) return;
-
         const attemptData = await withTimeout(
           attemptService.startAttempt(quizId),
           8000,
           'Quiz attempt could not be started. Please refresh and try again.'
         );
 
-        if (cancelled || runId !== initRunIdRef.current) return;
-
         if (!attemptData.questions?.length) {
           throw new Error('Quiz attempt started but no questions were returned.');
         }
 
         setAttemptId(attemptData.attemptId);
-
         setQuiz({
           id: attemptData.quizId,
           quizId: attemptData.quizId,
@@ -114,12 +111,10 @@ export default function QuizAttemptPage() {
         setAnswers(answersMap);
         setCurrentQuestionIndex(0);
       } catch (err) {
-        if (!cancelled && runId === initRunIdRef.current) {
-          const normalizedError = err instanceof Error ? err : new Error('Failed to start quiz');
-          setError(normalizedError.message);
-        }
+        const normalizedError = err instanceof Error ? err : new Error('Failed to start quiz');
+        setError(normalizedError.message);
       } finally {
-        if (!cancelled && runId === initRunIdRef.current) setLoading(false);
+        setLoading(false);
         submittingRef.current = false;
       }
     };
@@ -142,6 +137,8 @@ export default function QuizAttemptPage() {
       showNotification(err instanceof Error ? err.message : 'Failed to submit quiz', 'error');
       setSubmitting(false);
       expiredRef.current = false;
+    } finally {
+      submittingRef.current = false;
     }
   };
 
@@ -211,7 +208,9 @@ export default function QuizAttemptPage() {
         <Card sx={{ borderRadius: 5, border: '1px solid rgba(148, 163, 184, 0.14)', boxShadow: '0 12px 32px rgba(15, 23, 42, 0.06)' }}>
           <CardContent>
             <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
-            <Button onClick={() => navigate(-1)} variant="outlined">Go Back</Button>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+              <Button onClick={() => navigate(-1)} variant="outlined">Go Back</Button>
+            </Stack>
           </CardContent>
         </Card>
       </PageShell>
@@ -224,9 +223,11 @@ export default function QuizAttemptPage() {
         <Card sx={{ borderRadius: 5, border: '1px solid rgba(148, 163, 184, 0.14)', boxShadow: '0 12px 32px rgba(15, 23, 42, 0.06)' }}>
           <CardContent>
             <Alert severity="error">Failed to load quiz</Alert>
-            <Button onClick={() => navigate(-1)} variant="outlined" sx={{ mt: 2 }}>
-              Go Back
-            </Button>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mt: 2 }}>
+              <Button onClick={() => navigate(-1)} variant="outlined">
+                Go Back
+              </Button>
+            </Stack>
           </CardContent>
         </Card>
       </PageShell>
@@ -282,11 +283,13 @@ export default function QuizAttemptPage() {
       <Box sx={{ display: 'flex', gap: 2, justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
         <Button variant="outlined" onClick={handlePreviousQuestion} disabled={currentQuestionIndex === 0 || submitting} sx={{ minHeight: 42 }}>← Previous</Button>
         <Typography variant="body2" sx={{ fontWeight: 700 }}>{currentQuestionIndex + 1} / {quiz.questions.length}</Typography>
-        {currentQuestionIndex === quiz.questions.length - 1 ? (
-          <Button variant="contained" color="success" onClick={handleSubmitClick} disabled={submitting} sx={{ minHeight: 42 }}>{submitting ? 'Submitting...' : 'Submit Quiz'}</Button>
-        ) : (
-          <Button variant="contained" onClick={handleNextQuestion} disabled={submitting} sx={{ minHeight: 42 }}>Next →</Button>
-        )}
+        <Stack direction="row" spacing={1} flexWrap="wrap">
+          {currentQuestionIndex === quiz.questions.length - 1 ? (
+            <Button variant="contained" color="success" onClick={handleSubmitClick} disabled={submitting} sx={{ minHeight: 42 }}>{submitting ? 'Submitting...' : 'Submit Quiz'}</Button>
+          ) : (
+            <Button variant="contained" onClick={handleNextQuestion} disabled={submitting} sx={{ minHeight: 42 }}>Next →</Button>
+          )}
+        </Stack>
       </Box>
 
       <Dialog open={showSubmitConfirm} onClose={() => setShowSubmitConfirm(false)}>
