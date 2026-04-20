@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   Alert,
   Box,
+  Button,
   Card,
   CardContent,
   Collapse,
@@ -12,6 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { useAuth } from '../../shared';
 import PageShell from '../../shared/components/PageShell';
 import { analyticsService } from '../services/analyticsService';
@@ -23,21 +25,27 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set(['root']));
+  const fetchReport = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  useEffect(() => {
-    const fetchReport = async () => {
       try {
-        setLoading(true);
         const data = await analyticsService.getHierarchicalReportTree();
         setReport(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load report');
-      } finally {
-        setLoading(false);
+      } catch {
+        const fallback = await analyticsService.getHierarchicalReport();
+        setReport(fallback);
       }
-    };
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load report');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchReport();
+  useEffect(() => {
+    fetchReport(false);
   }, []);
 
   const toggleNode = (nodeId: string) => {
@@ -120,12 +128,25 @@ export default function AdminDashboard() {
   return (
     <PageShell title="Admin Dashboard" subtitle={`Welcome, ${state.user?.fullName || state.user?.email || 'admin'}`}>
       <Box sx={{ mb: 3, p: 3, borderRadius: 4, bgcolor: '#0f766e', color: '#fff' }}>
-        <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>
-          System Overview
-        </Typography>
-        <Typography variant="body2" sx={{ opacity: 0.9 }}>
-          Monitor hierarchy, completion, and performance across the platform.
-        </Typography>
+        <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ sm: 'center' }} justifyContent="space-between" spacing={2}>
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>
+              System Overview
+            </Typography>
+            <Typography variant="body2" sx={{ opacity: 0.9 }}>
+              Monitor hierarchy, completion, and performance across the platform.
+            </Typography>
+          </Box>
+          <Button
+            variant="contained"
+            color="inherit"
+            startIcon={<RefreshIcon />}
+            onClick={fetchReport}
+            sx={{ bgcolor: 'rgba(255,255,255,0.18)', color: '#fff' }}
+          >
+            Refresh
+          </Button>
+        </Stack>
       </Box>
 
       {error && (

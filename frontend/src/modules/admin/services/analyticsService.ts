@@ -198,10 +198,13 @@ export const analyticsService = {
   },
 
   async getHierarchicalReportTree(): Promise<HierarchicalReportNode> {
-    const response = await api.get<HierarchicalReportNode>(
-      '/analytics/hierarchical-report/tree'
-    );
-    return response.data;
+    console.log('[Admin Analytics] Fetching hierarchical tree from: /analytics/hierarchical-report/tree');
+    const response = await api.get<any>('/analytics/hierarchical-report/tree');
+    console.log('[Admin Analytics] Tree response status:', response.status);
+    console.log('[Admin Analytics] Tree raw response data:', response.data);
+    const transformed = this.transformHierarchicalReport(response.data);
+    console.log('[Admin Analytics] Tree transformed node:', transformed);
+    return transformed;
   },
 
   async getHierarchicalReportSummary(): Promise<any> {

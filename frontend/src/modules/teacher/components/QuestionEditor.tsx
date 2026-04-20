@@ -43,11 +43,17 @@ export default function QuestionEditor({ question, onUpdate, onDelete }: Questio
   };
 
   const handleUpdateOption = (optionId: string, content: string, isCorrect: boolean) => {
+    const nextAnswerOptions = question.answerOptions.map((opt) => {
+      if (opt.id !== optionId) {
+        return question.questionType === 'SINGLE_CHOICE' && isCorrect ? { ...opt, isCorrect: false } : opt;
+      }
+
+      return { ...opt, content, isCorrect };
+    });
+
     onUpdate({
       ...question,
-      answerOptions: question.answerOptions.map((opt) =>
-        opt.id === optionId ? { ...opt, content, isCorrect } : opt
-      ),
+      answerOptions: nextAnswerOptions,
     });
   };
 
@@ -140,6 +146,7 @@ export default function QuestionEditor({ question, onUpdate, onDelete }: Questio
                   <AnswerOptionForm
                     key={option.id}
                     option={option}
+                    questionType={question.questionType}
                     onUpdate={(content, isCorrect) =>
                       handleUpdateOption(option.id, content, isCorrect)
                     }

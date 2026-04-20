@@ -1,29 +1,31 @@
 import React from 'react';
 import {
-  Box,
   TextField,
   FormControlLabel,
   Checkbox,
+  Radio,
   IconButton,
   Card,
   CardContent,
   Stack,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { AnswerOption } from '../../shared/types';
+import { AnswerOption, QuestionType } from '../../shared/types';
 
 interface AnswerOptionFormProps {
   option: AnswerOption;
+  questionType: QuestionType;
   onUpdate: (content: string, isCorrect: boolean) => void;
   onDelete: () => void;
 }
 
-export default function AnswerOptionForm({ option, onUpdate, onDelete }: AnswerOptionFormProps) {
+export default function AnswerOptionForm({ option, questionType, onUpdate, onDelete }: AnswerOptionFormProps) {
+  const CorrectControl = questionType === 'SINGLE_CHOICE' ? Radio : Checkbox;
+
   return (
     <Card sx={{ mb: 1.5 }}>
       <CardContent>
         <Stack direction="row" spacing={1} alignItems="flex-start">
-          {/* Option Text */}
           <TextField
             fullWidth
             size="small"
@@ -34,10 +36,9 @@ export default function AnswerOptionForm({ option, onUpdate, onDelete }: AnswerO
             rows={2}
           />
 
-          {/* Correct Checkbox */}
           <FormControlLabel
             control={
-              <Checkbox
+              <CorrectControl
                 checked={option.isCorrect}
                 onChange={(e) => onUpdate(option.content, e.target.checked)}
                 title="Mark as correct answer"
@@ -47,7 +48,6 @@ export default function AnswerOptionForm({ option, onUpdate, onDelete }: AnswerO
             sx={{ mt: 1 }}
           />
 
-          {/* Delete Button */}
           <IconButton
             size="small"
             color="error"
