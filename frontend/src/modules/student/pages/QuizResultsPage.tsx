@@ -34,6 +34,14 @@ export default function QuizResultsPage() {
 
   // Get sectionId from navigation state
   const sectionId = (location.state as any)?.sectionId || null;
+  const analyticsNavigationState = {
+    sectionId,
+    sectionName: (location.state as any)?.sectionName,
+    courseName: (location.state as any)?.courseName,
+    facultyName: (location.state as any)?.facultyName,
+    term: (location.state as any)?.term,
+    academicYear: (location.state as any)?.academicYear,
+  };
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -128,7 +136,7 @@ export default function QuizResultsPage() {
     <PageShell title="Quiz Results" subtitle="Review your attempt and answer breakdown">
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
         <Button startIcon={<ArrowBackIcon />} variant="outlined" onClick={() => {
-          if (sectionId) navigate(`/student/sections/${sectionId}/analytics`);
+          if (sectionId) navigate(`/student/sections/${sectionId}/analytics`, { state: analyticsNavigationState });
           else navigate(-1);
         }} sx={{ minHeight: 42 }}>
           Back to Analytics

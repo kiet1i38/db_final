@@ -9,6 +9,56 @@ import {
   HierarchicalReportNode,
 } from '../../shared/types';
 
+const toSafeNumber = (value: unknown): number => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const normalizeRatio = (value: unknown): number => {
+  const parsed = toSafeNumber(value);
+  if (parsed <= 0) return 0;
+  return parsed > 1 ? parsed / 100 : parsed;
+};
+
+const normalizeStudentResult = (value: any): StudentQuizResult => ({
+  attemptId: String(value?.attemptId ?? value?._id ?? value?.id ?? ''),
+  quizId: String(value?.quizId ?? ''),
+  sectionId: value?.sectionId ? String(value.sectionId) : undefined,
+  studentId: value?.studentId ? String(value.studentId) : undefined,
+  studentName: value?.studentName ?? value?.studentFullname ?? undefined,
+  quizTitle: value?.quizTitle ?? 'Untitled quiz',
+  score: toSafeNumber(value?.score),
+  maxScore: toSafeNumber(value?.maxScore),
+  percentage: normalizeRatio(value?.percentage),
+  completionRate: value?.completionRate == null ? undefined : normalizeRatio(value.completionRate),
+  startedAt: value?.startedAt ?? undefined,
+  submittedAt: value?.submittedAt ?? '',
+  durationSeconds: toSafeNumber(value?.durationSeconds),
+  attemptNumber: Math.max(1, toSafeNumber(value?.attemptNumber) || 1),
+  status: value?.status === 'EXPIRED' ? 'EXPIRED' : 'SUBMITTED',
+});
+
+const normalizeStudentRanking = (value: any): StudentClassRanking | null => {
+  if (!value || value === 'null') return null;
+
+  return {
+    sectionId: String(value.sectionId ?? ''),
+    sectionName: value.sectionName ?? '',
+    studentId: value.studentId ? String(value.studentId) : undefined,
+    studentName: value.studentName ?? value.studentFullname ?? undefined,
+    studentFullname: value.studentFullname ?? value.studentName ?? undefined,
+    rankInSection: Math.max(1, toSafeNumber(value.rankInSection ?? value.rank) || 1),
+    averageScore: toSafeNumber(value.averageScore ?? value.score),
+    totalAttempts: toSafeNumber(value.totalAttempts),
+    totalRankedStudents: Math.max(0, toSafeNumber(value.totalRankedStudents)),
+    percentile: normalizeRatio(value.percentile),
+    sectionAverageScore: toSafeNumber(value.sectionAverageScore),
+    sectionHighestScore: toSafeNumber(value.sectionHighestScore),
+    sectionLowestScore: toSafeNumber(value.sectionLowestScore),
+    lastUpdatedAt: value.lastUpdatedAt ?? '',
+  };
+};
+
 export const analyticsService = {
   // Teacher Analytics
   async getQuizPerformance(sectionId: string): Promise<QuizPerformance[]> {
@@ -54,17 +104,17 @@ export const analyticsService = {
 
   // Student Analytics
   async getMyResults(sectionId: string): Promise<StudentQuizResult[]> {
-    const response = await api.get<StudentQuizResult[]>(
+    const response = await api.get<any>(
       `/analytics/sections/${sectionId}/my-results`
     );
-    return response.data || [];
+    return Array.isArray(response.data) ? response.data.map(normalizeStudentResult) : [];
   },
 
   async getMyQuizResults(quizId: string): Promise<StudentQuizResult[]> {
-    const response = await api.get<StudentQuizResult[]>(
+    const response = await api.get<any>(
       `/analytics/quizzes/${quizId}/my-results`
     );
-    return response.data || [];
+    return Array.isArray(response.data) ? response.data.map(normalizeStudentResult) : [];
   },
 
   async getAnswerReview(attemptId: string): Promise<any> {
@@ -77,11 +127,11 @@ export const analyticsService = {
     return response.data || [];
   },
 
-  async getMyClassRanking(sectionId: string): Promise<StudentClassRanking[]> {
-    const response = await api.get<StudentClassRanking[]>(
+  async getMyClassRanking(sectionId: string): Promise<StudentClassRanking | null> {
+    const response = await api.get<any>(
       `/analytics/sections/${sectionId}/my-ranking`
     );
-    return response.data || [];
+    return normalizeStudentRanking(response.data);
   },
 
   // Admin Analytics

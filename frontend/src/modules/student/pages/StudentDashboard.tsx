@@ -29,6 +29,14 @@ const getDashboardView = (view: string | null): DashboardView => {
   return 'overview';
 };
 
+const getAnalyticsNavigationState = (section: Section) => ({
+  sectionName: section.sectionName,
+  courseName: section.courseName,
+  facultyName: section.facultyName,
+  term: section.term,
+  academicYear: section.academicYear,
+});
+
 export default function StudentDashboard() {
   const { state } = useAuth();
   const navigate = useNavigate();
@@ -79,6 +87,15 @@ export default function StudentDashboard() {
           ? 'Section directory'
           : 'Student overview';
 
+  const heroTitle =
+    view === 'analytics'
+      ? 'See your sections through the lens of progress and feedback.'
+      : view === 'quizzes'
+        ? 'Move from section to quiz with a calmer, clearer workspace.'
+        : view === 'sections'
+          ? 'A warm academic directory for everything you are enrolled in.'
+          : 'A learning dashboard designed to stay focused and encouraging.';
+
   const renderStatCard = (
     title: string,
     value: string | number,
@@ -88,9 +105,9 @@ export default function StudentDashboard() {
       <Card
         sx={{
           height: '100%',
-          borderRadius: 5,
-          border: '1px solid rgba(148, 163, 184, 0.14)',
-          boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)',
+          borderRadius: 4,
+          border: '1px solid rgba(30,57,50,0.08)',
+          boxShadow: '0 0 0.5px rgba(0,0,0,0.14), 0 1px 1px rgba(0,0,0,0.24)',
         }}
       >
         <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -99,8 +116,8 @@ export default function StudentDashboard() {
               width: 52,
               height: 52,
               borderRadius: 4,
-              bgcolor: 'rgba(15, 118, 110, 0.08)',
-              color: '#0f766e',
+              bgcolor: 'var(--mint-wash)',
+              color: 'var(--academy-green)',
               display: 'grid',
               placeItems: 'center',
               flexShrink: 0,
@@ -126,45 +143,136 @@ export default function StudentDashboard() {
       <Card
         sx={{
           height: '100%',
-          borderRadius: 5,
-          boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)',
-          border: '1px solid rgba(148, 163, 184, 0.14)',
+          borderRadius: 4,
+          overflow: 'hidden',
+          boxShadow: '0 0 0.5px rgba(0,0,0,0.14), 0 1px 1px rgba(0,0,0,0.24)',
+          border: '1px solid rgba(30,57,50,0.08)',
           transition: 'transform 180ms ease, box-shadow 180ms ease',
           '&:hover': {
             transform: 'translateY(-4px)',
-            boxShadow: '0 18px 40px rgba(15, 23, 42, 0.12)',
+            boxShadow: '0 18px 30px rgba(30,57,50,0.12)',
           },
         }}
       >
-        <CardContent>
-          <Stack spacing={1.5}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
-              <Chip
-                label={section.term && section.academicYear ? `${section.term} ${section.academicYear}` : 'Current'}
-                size="small"
-                color="primary"
-                variant="outlined"
-              />
-              <Chip
-                label={mode === 'analytics' ? 'Insights' : mode === 'quizzes' ? 'Ready' : 'Enrolled'}
-                size="small"
-                color={mode === 'analytics' ? 'info' : 'success'}
-                variant="outlined"
-              />
-            </Box>
-            <Typography variant="h6" sx={{ fontWeight: 900, lineHeight: 1.2 }}>
+        <Box
+          sx={{
+            minHeight: 168,
+            px: 2,
+            py: 2,
+            color: '#fff',
+            background:
+              mode === 'analytics'
+                ? 'linear-gradient(145deg, #1E3932 0%, #2b5148 100%)'
+                : mode === 'quizzes'
+                  ? 'linear-gradient(145deg, #006241 0%, #00754A 100%)'
+                  : 'linear-gradient(145deg, #2b5148 0%, #1E3932 100%)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            position: 'relative',
+          }}
+        >
+          <Box
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              background:
+                'radial-gradient(circle at top right, rgba(255,255,255,0.14), transparent 30%)',
+            }}
+          />
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="flex-start"
+            gap={1}
+            sx={{ position: 'relative' }}
+          >
+            <Chip
+              label={section.term && section.academicYear ? `${section.term} ${section.academicYear}` : 'Current'}
+              size="small"
+              sx={{
+                color: '#fff',
+                bgcolor: 'rgba(255,255,255,0.14)',
+              }}
+            />
+            <Chip
+              label={mode === 'analytics' ? 'Insights' : mode === 'quizzes' ? 'Ready' : 'Enrolled'}
+              size="small"
+              sx={{
+                color: mode === 'analytics' ? 'var(--achievement-gold)' : '#fff',
+                bgcolor: mode === 'analytics' ? 'rgba(203,162,88,0.14)' : 'rgba(255,255,255,0.12)',
+              }}
+            />
+          </Stack>
+
+          <Box sx={{ position: 'relative' }}>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.72)' }}>
+              {section.courseCode || 'Course'}
+            </Typography>
+            <Typography
+              variant="h5"
+              sx={{
+                mt: 0.5,
+                fontFamily: 'var(--font-serif)',
+                fontWeight: 600,
+                lineHeight: 1.2,
+                color: '#fff',
+              }}
+            >
               {section.sectionName}
             </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                mt: 1,
+                color: 'rgba(255,255,255,0.72)',
+                maxWidth: 280,
+              }}
+            >
+              {section.courseName}
+            </Typography>
+          </Box>
+        </Box>
+        <CardContent>
+          <Stack spacing={1.5}>
             <Typography variant="body2" color="text.secondary" sx={{ minHeight: 44 }}>
-              {section.courseName} / {section.facultyName}
+              {section.facultyName} / {section.sectionCode}
             </Typography>
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              {section.courseCode && <Chip label={section.courseCode} size="small" variant="outlined" />}
-              {section.sectionCode && <Chip label={section.sectionCode} size="small" variant="outlined" />}
+              {section.courseCode && (
+                <Chip
+                  label={section.courseCode}
+                  size="small"
+                  variant="outlined"
+                  sx={{ borderColor: 'rgba(30,57,50,0.12)' }}
+                />
+              )}
+              {section.sectionCode && (
+                <Chip
+                  label={section.sectionCode}
+                  size="small"
+                  variant="outlined"
+                  sx={{ borderColor: 'rgba(30,57,50,0.12)' }}
+                />
+              )}
             </Stack>
           </Stack>
         </CardContent>
-        <CardActions sx={{ px: 2, pb: 2, gap: 1, flexWrap: 'wrap' }}>
+        <Box
+          sx={{
+            height: 4,
+            width: '100%',
+            bgcolor: 'var(--ceramic)',
+            '&::after': {
+              content: '""',
+              display: 'block',
+              height: '100%',
+              width: mode === 'analytics' ? '68%' : mode === 'quizzes' ? '82%' : '56%',
+              bgcolor: mode === 'analytics' ? 'var(--academy-green)' : 'var(--action-green)',
+            },
+          }}
+        />
+        <CardActions sx={{ px: 2, py: 2, gap: 1, flexWrap: 'wrap' }}>
           <Button
             fullWidth
             variant="contained"
@@ -176,7 +284,11 @@ export default function StudentDashboard() {
           <Button
             fullWidth
             variant="outlined"
-            onClick={() => navigate(`/student/sections/${section.sectionId}/analytics`)}
+            onClick={() =>
+              navigate(`/student/sections/${section.sectionId}/analytics`, {
+                state: getAnalyticsNavigationState(section),
+              })
+            }
             sx={{ minHeight: 42, flex: '1 1 180px' }}
           >
             {mode === 'quizzes' ? 'See Results' : 'Analytics'}
@@ -207,24 +319,34 @@ export default function StudentDashboard() {
       <Box
         sx={{
           mb: 3,
-          p: { xs: 2.5, md: 3.5 },
+          p: { xs: 3, md: 4 },
           borderRadius: 6,
-          background: 'linear-gradient(135deg, #0f766e 0%, #115e59 100%)',
+          background:
+            'radial-gradient(circle at top right, rgba(255,255,255,0.12), transparent 28%), linear-gradient(145deg, #1E3932 0%, #2b5148 100%)',
           color: '#fff',
-          boxShadow: '0 16px 40px rgba(15, 118, 110, 0.28)',
+          boxShadow: '0 20px 38px rgba(30,57,50,0.18)',
         }}
       >
-        <Stack spacing={1}>
+        <Stack spacing={1.5}>
           <Chip
             label={heroLabel}
             size="small"
-            sx={{ width: 'fit-content', bgcolor: 'rgba(255,255,255,0.18)', color: '#fff' }}
+            sx={{ width: 'fit-content', bgcolor: 'rgba(255,255,255,0.14)', color: '#fff' }}
           />
-          <Typography variant="h4" sx={{ fontWeight: 900, lineHeight: 1.1 }}>
-            Welcome back, {state.user?.fullName || state.user?.email}
+          <Typography
+            variant="h3"
+            sx={{
+              fontFamily: 'var(--font-serif)',
+              fontWeight: 600,
+              lineHeight: 1.1,
+              color: '#fff',
+              maxWidth: 820,
+            }}
+          >
+            {heroTitle}
           </Typography>
-          <Typography variant="body2" sx={{ opacity: 0.92, maxWidth: 760 }}>
-            You are enrolled in {sections.length} section{sections.length === 1 ? '' : 's'}.
+          <Typography variant="body1" sx={{ opacity: 0.84, maxWidth: 760 }}>
+            Welcome back, {state.user?.fullName || state.user?.email}. You are enrolled in {sections.length} section{sections.length === 1 ? '' : 's'}.
             {view === 'analytics'
               ? ' Open analytics for any section to review rankings, results, and recent submissions.'
               : view === 'quizzes'
@@ -286,8 +408,10 @@ export default function StudentDashboard() {
           sx={{
             mt: 3,
             borderRadius: 5,
-            border: '1px solid rgba(148, 163, 184, 0.14)',
-            boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)',
+            border: '1px solid rgba(30,57,50,0.08)',
+            boxShadow: '0 0 0.5px rgba(0,0,0,0.14), 0 1px 1px rgba(0,0,0,0.24)',
+            background:
+              'linear-gradient(135deg, rgba(255,255,255,0.86) 0%, rgba(255,255,255,1) 100%)',
           }}
         >
           <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
@@ -312,7 +436,11 @@ export default function StudentDashboard() {
                   <Button
                     variant="outlined"
                     startIcon={<AnalyticsRoundedIcon />}
-                    onClick={() => navigate(`/student/sections/${sections[0].sectionId}/analytics`)}
+                    onClick={() =>
+                      navigate(`/student/sections/${sections[0].sectionId}/analytics`, {
+                        state: getAnalyticsNavigationState(sections[0]),
+                      })
+                    }
                   >
                     Open analytics
                   </Button>

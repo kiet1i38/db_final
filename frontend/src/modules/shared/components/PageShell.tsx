@@ -4,7 +4,9 @@ import {
   Avatar,
   Box,
   Button,
+  Divider,
   Drawer,
+  Fab,
   IconButton,
   InputBase,
   List,
@@ -14,10 +16,11 @@ import {
   Paper,
   Stack,
   Toolbar,
+  Tooltip,
   Typography,
   useMediaQuery,
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+import { alpha, useTheme } from '@mui/material/styles';
 import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
 import SchoolRoundedIcon from '@mui/icons-material/SchoolRounded';
 import QuizRoundedIcon from '@mui/icons-material/QuizRounded';
@@ -28,12 +31,13 @@ import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import NotificationsNoneRoundedIcon from '@mui/icons-material/NotificationsNoneRounded';
 import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
+import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { USER_ROLES } from '../utils/constants';
 
-const drawerWidth = 280;
-const contentMaxWidth = 1280;
+const drawerWidth = 296;
+const contentMaxWidth = 1360;
 
 interface NavItem {
   label: string;
@@ -49,7 +53,7 @@ interface NavGroup {
 
 const getStudentGroups = (): NavGroup[] => [
   {
-    title: 'Main',
+    title: 'Learning',
     items: [
       {
         label: 'Dashboard',
@@ -87,7 +91,7 @@ const getStudentGroups = (): NavGroup[] => [
 
 const getTeacherGroups = (): NavGroup[] => [
   {
-    title: 'Main',
+    title: 'Teaching',
     items: [
       {
         label: 'Dashboard',
@@ -125,7 +129,7 @@ const getTeacherGroups = (): NavGroup[] => [
 
 const getAdminGroups = (): NavGroup[] => [
   {
-    title: 'Admin',
+    title: 'Control',
     items: [
       {
         label: 'Overview',
@@ -157,9 +161,20 @@ const getNavGroups = (role?: string): NavGroup[] => {
 };
 
 const getSearchPlaceholder = (role?: string) => {
-  if (role === USER_ROLES.ADMIN) return 'Search hierarchy or metrics...';
-  if (role === USER_ROLES.TEACHER) return 'Search sections, quizzes, or analytics...';
+  if (role === USER_ROLES.ADMIN) return 'Search hierarchy, metrics, or reports...';
+  if (role === USER_ROLES.TEACHER) return 'Search sections, quizzes, or student insights...';
   return 'Search sections, quizzes, or results...';
+};
+
+const formatRoleLabel = (role?: string) => {
+  if (!role) return 'User';
+  return role.charAt(0) + role.slice(1).toLowerCase();
+};
+
+const getUserInitial = (label?: string) => {
+  const source = label?.trim();
+  if (!source) return 'U';
+  return source.charAt(0).toUpperCase();
 };
 
 export default function PageShell({
@@ -189,6 +204,8 @@ export default function PageShell({
         ? '/teacher/dashboard'
         : '/student/dashboard';
   const currentView = new URLSearchParams(location.search).get('view');
+  const displayName = state.user?.fullName || state.user?.email || 'User';
+  const roleLabel = formatRoleLabel(state.user?.role);
 
   const handleSignOut = async () => {
     await logout();
@@ -202,48 +219,109 @@ export default function PageShell({
 
   const handleMenuToggle = () => setMobileOpen((prev) => !prev);
 
+  const handleTutorClick = () => {
+    window.dispatchEvent(
+      new CustomEvent('notification:show', {
+        detail: {
+          message: 'AI Tutor and Quick Notes are the next upgrade in this workspace.',
+          type: 'info',
+        },
+      })
+    );
+  };
+
   const drawerContent = (
     <Stack
-      spacing={2.5}
+      spacing={3}
       sx={{
         height: '100%',
-        px: 2,
+        px: 2.25,
         py: 2.5,
-        bgcolor: '#fff',
+        bgcolor: 'var(--ceramic)',
+        backgroundImage: `linear-gradient(180deg, ${alpha('#ffffff', 0.55)} 0%, transparent 42%)`,
       }}
     >
       <Box
-        sx={{ display: 'flex', alignItems: 'center', gap: 1.5, px: 1, py: 0.5, cursor: 'pointer' }}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          px: 1,
+          py: 1,
+          cursor: 'pointer',
+          borderRadius: 4,
+        }}
         onClick={() => handleNavigate(homePath)}
       >
         <Box
           sx={{
-            width: 44,
-            height: 44,
+            width: 46,
+            height: 46,
             borderRadius: 3,
-            bgcolor: '#0f766e',
+            bgcolor: 'var(--academy-green)',
             color: '#fff',
             display: 'grid',
             placeItems: 'center',
             fontWeight: 800,
-            boxShadow: '0 14px 28px rgba(15, 118, 110, 0.24)',
+            boxShadow: '0 10px 18px rgba(0, 98, 65, 0.2)',
           }}
         >
           E
         </Box>
         <Box>
-          <Typography variant="h6" sx={{ fontWeight: 800, lineHeight: 1.1 }}>
+          <Typography
+            variant="h6"
+            sx={{
+              fontFamily: 'var(--font-serif)',
+              fontWeight: 600,
+              lineHeight: 1.05,
+              color: 'var(--deep-slate)',
+            }}
+          >
             E-Learning
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            Academic dashboard
+            Warm academic workspace
           </Typography>
         </Box>
       </Box>
 
-      {getNavGroups(state.user?.role).map((group) => (
+      <Paper
+        sx={{
+          p: 2,
+          borderRadius: 4,
+          bgcolor: alpha('#ffffff', 0.72),
+          border: `1px solid ${alpha('#1E3932', 0.08)}`,
+          boxShadow: 'none',
+        }}
+      >
+        <Stack spacing={0.9}>
+          <Typography variant="overline" sx={{ color: 'var(--academy-green)' }}>
+            Daily focus
+          </Typography>
+          <Typography
+            variant="h6"
+            sx={{
+              fontFamily: 'var(--font-serif)',
+              color: 'var(--deep-slate)',
+            }}
+          >
+            Move one lesson forward today.
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            This workspace is designed to stay calm, readable, and encouraging during long study sessions.
+          </Typography>
+        </Stack>
+      </Paper>
+
+      {getNavGroups(state.user?.role).map((group, index) => (
         <Box key={group.title}>
-          <Typography variant="overline" color="text.secondary" sx={{ px: 1.5, letterSpacing: 1.3 }}>
+          {index > 0 && <Divider sx={{ mb: 2, borderColor: alpha('#1E3932', 0.08) }} />}
+          <Typography
+            variant="overline"
+            color="text.secondary"
+            sx={{ px: 1.5, letterSpacing: 1.4 }}
+          >
             {group.title}
           </Typography>
           <List disablePadding sx={{ mt: 1 }}>
@@ -255,27 +333,32 @@ export default function PageShell({
                   key={item.label}
                   onClick={() => handleNavigate(item.path)}
                   sx={{
-                    borderRadius: 3,
-                    mb: 0.5,
-                    minHeight: 50,
-                    bgcolor: active ? 'rgba(15, 118, 110, 0.08)' : 'transparent',
-                    color: active ? '#0f4c5c' : 'text.primary',
+                    borderRadius: 999,
+                    mb: 0.75,
+                    minHeight: 52,
+                    px: 1.5,
+                    bgcolor: active ? alpha('#ffffff', 0.9) : 'transparent',
+                    border: active ? `1px solid ${alpha('#00754A', 0.18)}` : '1px solid transparent',
+                    color: active ? 'var(--academy-green)' : 'var(--deep-slate)',
+                    boxShadow: active ? '0 8px 16px rgba(0, 0, 0, 0.06)' : 'none',
                     '&:hover': {
-                      bgcolor: active ? 'rgba(15, 118, 110, 0.12)' : 'rgba(15, 23, 42, 0.04)',
+                      bgcolor: active ? alpha('#ffffff', 0.96) : alpha('#ffffff', 0.55),
                     },
                   }}
                 >
                   <ListItemIcon
                     sx={{
                       minWidth: 40,
-                      color: active ? '#0f766e' : 'text.secondary',
+                      color: active ? 'var(--action-green)' : alpha('#1E3932', 0.72),
                     }}
                   >
                     {item.icon}
                   </ListItemIcon>
                   <ListItemText
                     primary={item.label}
-                    primaryTypographyProps={{ fontWeight: active ? 800 : 600 }}
+                    primaryTypographyProps={{
+                      fontWeight: active ? 700 : 600,
+                    }}
                   />
                 </ListItemButton>
               );
@@ -285,24 +368,33 @@ export default function PageShell({
       ))}
 
       <Box sx={{ mt: 'auto' }}>
-        <Box
+        <Paper
           sx={{
-            p: 2,
-            borderRadius: 5,
-            bgcolor: '#ecfeff',
-            border: '1px solid rgba(15, 118, 110, 0.08)',
+            p: 2.25,
+            borderRadius: 4,
+            bgcolor: 'var(--deep-slate)',
+            color: 'var(--text-white)',
+            boxShadow: 'none',
           }}
         >
-          <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
-            Need help?
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-            Check your notifications or contact support.
-          </Typography>
-          <Button fullWidth variant="contained" onClick={handleSignOut}>
-            Sign out
-          </Button>
-        </Box>
+          <Stack spacing={1.25}>
+            <Typography
+              sx={{
+                fontFamily: 'var(--font-script)',
+                fontSize: '1.15rem',
+                color: alpha('#ffffff', 0.9),
+              }}
+            >
+              Need a hand?
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'var(--text-white-soft)' }}>
+              Check notifications, review your recent activity, or sign out when you are done.
+            </Typography>
+            <Button fullWidth variant="contained" onClick={handleSignOut}>
+              Sign out
+            </Button>
+          </Stack>
+        </Paper>
       </Box>
     </Stack>
   );
@@ -312,9 +404,9 @@ export default function PageShell({
       sx={{
         display: 'flex',
         minHeight: '100vh',
-        bgcolor: '#f6f8fc',
+        bgcolor: 'var(--paper-neutral)',
         backgroundImage:
-          'radial-gradient(circle at top right, rgba(15,118,110,0.08), transparent 30%), radial-gradient(circle at bottom left, rgba(14,165,233,0.06), transparent 28%)',
+          'radial-gradient(circle at top right, rgba(223,196,157,0.22), transparent 26%), radial-gradient(circle at bottom left, rgba(212,233,226,0.58), transparent 30%)',
       }}
     >
       <Drawer
@@ -328,7 +420,8 @@ export default function PageShell({
           '& .MuiDrawer-paper': {
             width: drawerWidth,
             boxSizing: 'border-box',
-            borderRight: '1px solid rgba(15, 23, 42, 0.08)',
+            borderRight: `1px solid ${alpha('#1E3932', 0.08)}`,
+            backgroundColor: 'var(--ceramic)',
           },
         }}
       >
@@ -340,13 +433,13 @@ export default function PageShell({
           position="sticky"
           elevation={0}
           sx={{
-            bgcolor: 'rgba(246,248,252,0.86)',
-            backdropFilter: 'blur(16px)',
+            bgcolor: alpha('#f2f0eb', 0.88),
+            backdropFilter: 'blur(18px)',
             color: 'text.primary',
-            borderBottom: '1px solid rgba(15, 23, 42, 0.08)',
+            borderBottom: `1px solid ${alpha('#1E3932', 0.08)}`,
           }}
         >
-          <Toolbar sx={{ minHeight: 84 }}>
+          <Toolbar sx={{ minHeight: { xs: 78, md: 88 } }}>
             <Box
               sx={{
                 width: '100%',
@@ -358,7 +451,13 @@ export default function PageShell({
               }}
             >
               {!isDesktop && (
-                <IconButton onClick={handleMenuToggle} sx={{ bgcolor: '#fff' }}>
+                <IconButton
+                  onClick={handleMenuToggle}
+                  sx={{
+                    bgcolor: alpha('#ffffff', 0.9),
+                    border: `1px solid ${alpha('#1E3932', 0.08)}`,
+                  }}
+                >
                   <MenuRoundedIcon />
                 </IconButton>
               )}
@@ -369,14 +468,18 @@ export default function PageShell({
                   display: 'flex',
                   alignItems: 'center',
                   px: 2,
-                  py: 1,
+                  py: 1.1,
                   borderRadius: 999,
                   boxShadow: 'none',
-                  border: '1px solid rgba(15, 23, 42, 0.08)',
+                  bgcolor: alpha('#ffffff', 0.72),
+                  border: `1px solid ${alpha('#1E3932', 0.08)}`,
                 }}
               >
-                <SearchRoundedIcon sx={{ color: 'text.secondary', mr: 1 }} />
-                <InputBase placeholder={getSearchPlaceholder(state.user?.role)} sx={{ flex: 1 }} />
+                <SearchRoundedIcon sx={{ color: alpha('#1E3932', 0.55), mr: 1 }} />
+                <InputBase
+                  placeholder={getSearchPlaceholder(state.user?.role)}
+                  sx={{ flex: 1 }}
+                />
               </Paper>
 
               {actionLabel && onAction && (
@@ -390,21 +493,56 @@ export default function PageShell({
                 </Button>
               )}
 
-              <IconButton sx={{ display: { xs: 'none', sm: 'inline-flex' } }}>
+              <IconButton
+                sx={{
+                  display: { xs: 'none', sm: 'inline-flex' },
+                  bgcolor: alpha('#ffffff', 0.75),
+                  border: `1px solid ${alpha('#1E3932', 0.08)}`,
+                }}
+              >
                 <NotificationsNoneRoundedIcon />
               </IconButton>
 
-              <Stack direction="row" spacing={1.5} alignItems="center">
+              <Paper
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.25,
+                  px: 1.2,
+                  py: 0.8,
+                  borderRadius: 999,
+                  boxShadow: 'none',
+                  bgcolor: alpha('#ffffff', 0.76),
+                  border: `1px solid ${alpha('#1E3932', 0.08)}`,
+                }}
+              >
                 <Box sx={{ textAlign: 'right', display: { xs: 'none', md: 'block' } }}>
-                  <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                    {state.user?.fullName || 'User'}
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: 700,
+                      maxWidth: 170,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {displayName}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {state.user?.role}
+                    {roleLabel}
                   </Typography>
                 </Box>
-                <Avatar sx={{ width: 38, height: 38 }}>{state.user?.fullName?.[0] || 'U'}</Avatar>
-              </Stack>
+                <Avatar
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    bgcolor: 'var(--academy-green)',
+                  }}
+                >
+                  {getUserInitial(displayName)}
+                </Avatar>
+              </Paper>
             </Box>
           </Toolbar>
         </AppBar>
@@ -424,7 +562,7 @@ export default function PageShell({
               >
                 <Box>
                   {title && (
-                    <Typography variant="h4" sx={{ fontWeight: 800 }}>
+                    <Typography variant="h4" sx={{ fontWeight: 700, color: 'var(--deep-slate)' }}>
                       {title}
                     </Typography>
                   )}
@@ -452,6 +590,21 @@ export default function PageShell({
           </Box>
         </Box>
       </Box>
+
+      <Tooltip title="AI Tutor / Quick Notes">
+        <Fab
+          aria-label="AI Tutor and Quick Notes"
+          onClick={handleTutorClick}
+          sx={{
+            position: 'fixed',
+            right: { xs: 16, md: 28 },
+            bottom: { xs: 16, md: 28 },
+            zIndex: theme.zIndex.snackbar,
+          }}
+        >
+          <AutoAwesomeRoundedIcon />
+        </Fab>
+      </Tooltip>
     </Box>
   );
 }

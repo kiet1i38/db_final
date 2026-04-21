@@ -184,15 +184,20 @@ export interface QuizPerformance {
 
 export interface StudentQuizResult {
   attemptId: string;
-  studentId: string;
-  studentName: string;
   quizId: string;
+  sectionId?: string;
+  studentId?: string;
+  studentName?: string;
   quizTitle: string;
   score: number;
   maxScore: number;
   percentage: number;
-  completionRate: number;
+  completionRate?: number;
+  startedAt?: string;
   submittedAt: string;
+  durationSeconds?: number;
+  attemptNumber?: number;
+  status?: 'SUBMITTED' | 'EXPIRED';
 }
 
 export interface AtRiskStudent {
@@ -213,11 +218,20 @@ export interface AtRiskStudentsResponse {
 }
 
 export interface StudentClassRanking {
-  studentId: string;
-  studentName: string;
-  rank: number;
-  score: number;
+  sectionId: string;
+  sectionName: string;
+  studentId?: string;
+  studentName?: string;
+  studentFullname?: string;
+  rankInSection: number;
+  averageScore: number;
+  totalAttempts: number;
+  totalRankedStudents: number;
   percentile: number;
+  sectionAverageScore: number;
+  sectionHighestScore: number;
+  sectionLowestScore: number;
+  lastUpdatedAt: string;
 }
 
 export interface ScoreDistributionBucket {
